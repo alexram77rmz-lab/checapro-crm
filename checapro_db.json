@@ -1,0 +1,12 @@
+{
+  "logs": [
+    {
+      "device": "ZKTeco SpeedFace-V5L",
+      "employeePin": "1024",
+      "event": "entrada",
+      "timestamp": "09:24",
+      "receivedAt": "2026-10-16T21:57:39.119Z"
+    }
+  ],
+  "lastSync": null
+}

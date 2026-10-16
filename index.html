@@ -1,0 +1,2775 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#08080a">
+  <title>ChecaPro CRM | Sistema Multi-Empresa de Checadores, Retardos y App del Empleado</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><circle cx='50' cy='50' r='30' fill='none' stroke='white' stroke-width='7'/><path d='M50 32v18l12 8' fill='none' stroke='%2310b981' stroke-width='7' stroke-linecap='round'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#08080a',
+            charcoal: '#111116',
+            panel: '#181820'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    html {
+      scroll-behavior: smooth;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    .font-mono-clock {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Microinteracciones de botones (#2) y Hover (#3) */
+    .btn-tactile {
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .btn-tactile:active {
+      transform: scale(0.96);
+    }
+    .card-interactive {
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+    .card-interactive:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px -8px rgba(79, 70, 229, 0.28);
+      border-color: rgba(99, 102, 241, 0.55);
+    }
+    /* Transiciones entre secciones (#9) */
+    .tab-section {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .tab-hidden {
+      display: none !important;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    /* Animación de entrada (#10) */
+    @keyframes staggerFadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-stagger-1 { animation: staggerFadeUp 0.4s ease forwards; }
+    .animate-stagger-2 { animation: staggerFadeUp 0.55s ease forwards; }
+    .animate-stagger-3 { animation: staggerFadeUp 0.7s ease forwards; }
+
+    /* Pulso de alerta */
+    @keyframes pulseAlert {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+    .pulse-red {
+      animation: pulseAlert 2s infinite;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-obsidian text-slate-900 dark:text-slate-100 min-h-screen flex flex-col pb-20 lg:pb-0 transition-colors duration-200">
+
+  <!-- LOADING SHIMMER OVERLAY (#8) -->
+  <div id="loading-screen" class="fixed inset-0 z-50 bg-obsidian flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mb-4 animate-bounce">
+      <i data-lucide="clock-4" class="w-8 h-8 text-indigo-400"></i>
+    </div>
+    <p class="text-sm font-bold text-white tracking-wide">Sincronizando ChecaPro CRM Multi-Sucursal...</p>
+    <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-3">
+      <div class="h-full bg-gradient-to-r from-indigo-500 via-emerald-400 to-indigo-500 w-3/4 animate-pulse"></div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER (#14) -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- TOP GLOBAL BAR -->
+  <div class="no-print bg-slate-900 dark:bg-charcoal text-white px-4 py-2 text-xs border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        EN VIVO
+      </span>
+      <span id="i18n-top-banner" class="text-slate-300 font-medium">
+        <strong>ChecaPro CRM SaaS</strong>: Reloj Checador Híbrido (Entrada, Comida, Salida), Tablas de Retardos, Alertas al Empleado y Gráficas Personales.
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2 ml-auto">
+      <!-- Reloj Global -->
+      <div class="hidden sm:flex items-center gap-1.5 bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-lg font-mono-clock text-xs text-emerald-400">
+        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+        <span id="global-live-clock">09:25:00</span>
+      </div>
+
+      <!-- Language Switcher (#16) -->
+      <button onclick="toggleLanguage()" id="lang-btn" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition">
+        🌐 ES / EN
+      </button>
+
+      <!-- Dark / Light Mode Toggle (#15) -->
+      <button onclick="toggleTheme()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 transition" title="Cambiar Tema Oscuro/Claro">
+        <i data-lucide="sun-moon" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Reset Demo Data -->
+      <button onclick="resetDemoData()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-slate-300 text-[11px] transition" title="Restaurar datos demo iniciales">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 inline"></i> Reset Demo
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN APP LAYOUT -->
+  <div class="flex-1 flex min-h-0">
+    <!-- SIDEBAR (Desktop) -->
+    <aside class="no-print w-72 bg-white dark:bg-charcoal border-r border-slate-200 dark:border-slate-800/80 hidden lg:flex flex-col justify-between shrink-0">
+      <div>
+        <!-- Brand Logo -->
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <i data-lucide="fingerprint" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
+              ChecaPro<span class="text-indigo-500">.crm</span>
+            </h1>
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Multi-Empresa & App Empleado</span>
+          </div>
+        </div>
+
+        <!-- Global Company & Branch Filter in Sidebar -->
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-obsidian/40 space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              🏢 Empresa Activa (CRM)
+            </label>
+            <select id="global-company-select" onchange="handleGlobalFilterChange()" class="w-full bg-white dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              📍 Sucursal / Planta
+            </label>
+            <select id="global-branch-select" onchange="handleGlobalFilterChange()" class="w-full bg-white dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="p-3 space-y-1.5" aria-label="Navegación Principal">
+          <button onclick="switchTab('company-tables')" id="nav-company-tables" class="btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs shadow-md shadow-indigo-600/20">
+            <i data-lucide="table-properties" class="w-4 h-4 shrink-0"></i>
+            <span class="text-left">Tablas Empresa & Retardos</span>
+            <span id="badge-late-count" class="ml-auto bg-amber-400 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="switchTab('employee-app')" id="nav-employee-app" class="btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-panel font-semibold text-xs">
+            <i data-lucide="smartphone" class="w-4 h-4 shrink-0 text-emerald-500"></i>
+            <span class="text-left">App Empleado (Checar + Gráfica)</span>
+            <span id="badge-emp-alerts" class="ml-auto bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">!</span>
+          </button>
+
+          <button onclick="switchTab('crm-multi')" id="nav-crm-multi" class="btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-panel font-semibold text-xs">
+            <i data-lucide="building-2" class="w-4 h-4 shrink-0 text-indigo-400"></i>
+            <span class="text-left">CRM Empresas & Sucursales</span>
+          </button>
+
+          <button onclick="switchTab('kiosk')" id="nav-kiosk" class="btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-panel font-semibold text-xs">
+            <i data-lucide="key-round" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <span class="text-left">Kiosco Sucursal (PIN / QR)</span>
+          </button>
+
+          <button onclick="switchTab('hardware')" id="nav-hardware" class="btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-panel font-semibold text-xs">
+            <i data-lucide="cpu" class="w-4 h-4 shrink-0 text-cyan-400"></i>
+            <span class="text-left">Conector Biométrico / API</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Bottom Quick Action Box (#11 CTA & Socials #17) -->
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800/80 space-y-3">
+        <div class="bg-gradient-to-br from-indigo-950/90 to-slate-900 p-3.5 rounded-2xl border border-indigo-500/30 text-xs text-white">
+          <div class="flex items-center gap-2 font-bold text-emerald-400 mb-1">
+            <i data-lucide="bell-ring" class="w-4 h-4"></i>
+            <span>Detector Automático</span>
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            Detecta quién no ha checado entrada o regreso de comida y envía alerta interactiva al instante.
+          </p>
+          <button onclick="triggerAutoAuditAlerts()" class="btn-tactile mt-2.5 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i> Auditar y Alertar Faltantes
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+          <span>Soporte & Alertas:</span>
+          <div class="flex items-center gap-2">
+            <a href="https://wa.me/5215500000000?text=Hola%20quiero%20conectar%20ChecaPro%20CRM" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition" title="WhatsApp Directo">WhatsApp</a>
+            <span>•</span>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:text-pink-400 transition" title="Instagram">IG</a>
+            <span>•</span>
+            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition" title="Ubicación Sucursales">Maps</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE CONTENT -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+      <!-- HERO / STICKY HEADER (#10, #11) -->
+      <header class="no-print bg-white/95 dark:bg-charcoal/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sticky top-0 z-30">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="animate-stagger-1">
+            <div class="flex items-center gap-2">
+              <span id="active-context-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
+                Multi-Empresa (3 Empresas • 8 Sucursales)
+              </span>
+            </div>
+            <h2 id="main-view-title" class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">
+              Tablas de Asistencia, Comidas y Retardos en Tiempo Real
+            </h2>
+          </div>
+
+          <!-- Mobile Selectors + Primary CTAs -->
+          <div class="flex flex-wrap items-center gap-2 animate-stagger-2">
+            <!-- Mobile Company Selector -->
+            <select id="mobile-company-select" onchange="syncMobileFilter(this.value)" class="lg:hidden bg-slate-100 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-semibold">
+              <!-- Populated by JS -->
+            </select>
+
+            <button onclick="switchTab('employee-app')" class="btn-tactile px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="smartphone" class="w-4 h-4"></i>
+              <span>Ir a App del Empleado</span>
+            </button>
+
+            <button onclick="openNewCheckModal()" class="btn-tactile px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              <span>+ Simular Checada</span>
+            </button>
+
+            <button onclick="exportAttendanceCSV()" class="btn-tactile px-3 py-2 rounded-xl bg-slate-100 dark:bg-panel hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
+              <span class="hidden sm:inline">Exportar Excel</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- =================================================================== -->
+      <!-- VISTA 1: TABLAS DE EMPRESA, RETARDOS, COMIDAS Y ALERTAS EN VIVO     -->
+      <!-- =================================================================== -->
+      <section id="tab-company-tables" class="tab-section p-4 sm:p-6 space-y-6">
+
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3.5 animate-stagger-1">
+          <!-- KPI 1 -->
+          <div onclick="setTableFilter('all')" class="card-interactive cursor-pointer bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              <span>Plantilla Activa</span>
+              <i data-lucide="users" class="w-4 h-4 text-indigo-500"></i>
+            </div>
+            <p id="kpi-total-emp" class="text-2xl font-black text-slate-900 dark:text-white mt-1">12</p>
+            <p id="kpi-total-sub" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">En 3 empresas y 8 sucursales</p>
+          </div>
+
+          <!-- KPI 2 -->
+          <div onclick="setTableFilter('on_time')" class="card-interactive cursor-pointer bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span>Llegaron a Tiempo</span>
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+            </div>
+            <p id="kpi-ontime" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Dentro de tolerancia</p>
+          </div>
+
+          <!-- KPI 3 -->
+          <div onclick="setTableFilter('late')" class="card-interactive cursor-pointer bg-white dark:bg-charcoal p-4 rounded-2xl border border-amber-500/30 dark:border-amber-500/30">
+            <div class="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-semibold">
+              <span>Llegaron Tarde (Retardo)</span>
+              <i data-lucide="clock-alert" class="w-4 h-4"></i>
+            </div>
+            <p id="kpi-late" class="text-2xl font-black text-amber-500 mt-1">0</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Gráfica enviada al empleado</p>
+          </div>
+
+          <!-- KPI 4 -->
+          <div onclick="setTableFilter('lunch')" class="card-interactive cursor-pointer bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between text-xs text-cyan-600 dark:text-cyan-400 font-semibold">
+              <span>En Comida / Pausa</span>
+              <i data-lucide="utensils" class="w-4 h-4"></i>
+            </div>
+            <p id="kpi-lunch" class="text-2xl font-black text-cyan-500 mt-1">0</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Monitoreo de regreso</p>
+          </div>
+
+          <!-- KPI 5 -->
+          <div onclick="setTableFilter('missing')" class="card-interactive cursor-pointer col-span-2 sm:col-span-1 bg-rose-500/5 dark:bg-rose-950/20 p-4 rounded-2xl border border-rose-500/40">
+            <div class="flex items-center justify-between text-xs text-rose-600 dark:text-rose-400 font-bold">
+              <span>Sin Checar / Alerta</span>
+              <i data-lucide="bell-ring" class="w-4 h-4 animate-bounce"></i>
+            </div>
+            <p id="kpi-missing" class="text-2xl font-black text-rose-500 mt-1">0</p>
+            <p class="text-[11px] text-rose-600/80 dark:text-rose-300/80 mt-0.5">Alerta "¿Por qué no checaste?"</p>
+          </div>
+        </div>
+
+        <!-- FILTER BAR & SEARCH -->
+        <div class="bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-1.5" id="status-filter-pills">
+            <button onclick="setTableFilter('all')" data-filter="all" class="filter-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition">
+              Todos
+            </button>
+            <button onclick="setTableFilter('late')" data-filter="late" class="filter-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-panel text-slate-700 dark:text-slate-300 hover:bg-amber-500/20 transition">
+              🚨 Llegaron Tarde
+            </button>
+            <button onclick="setTableFilter('missing')" data-filter="missing" class="filter-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-panel text-slate-700 dark:text-slate-300 hover:bg-rose-500/20 transition">
+              ⚠️ No han checado
+            </button>
+            <button onclick="setTableFilter('lunch')" data-filter="lunch" class="filter-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-panel text-slate-700 dark:text-slate-300 hover:bg-cyan-500/20 transition">
+              🍽️ Salida a Comer
+            </button>
+            <button onclick="setTableFilter('on_time')" data-filter="on_time" class="filter-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-panel text-slate-700 dark:text-slate-300 hover:bg-emerald-500/20 transition">
+              ✅ A Tiempo
+            </button>
+            <button onclick="setTableFilter('justified')" data-filter="justified" class="filter-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-panel text-slate-700 dark:text-slate-300 hover:bg-indigo-500/20 transition">
+              💬 Con Respuesta del Empleado
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="relative flex-1 sm:w-64">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="table-search-input" oninput="renderCompanyTable()" placeholder="Buscar empleado, PIN, sucursal..." class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- MASTER ATTENDANCE & LATE ARRIVALS TABLE -->
+        <div class="bg-white dark:bg-charcoal rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-indigo-500"></i>
+                <span>Tabla Maestra de Checadas por Empresa y Sucursal</span>
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                Registra Entrada, Salida a Comer, Regreso de Comer y Salida. Haz clic en <strong>"Ver App / Gráfica"</strong> en cualquier empleado para abrir su teléfono y ver su alerta o gráfica de retardos.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="triggerAutoAuditAlerts()" class="btn-tactile px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+                <i data-lucide="bell-ring" class="w-3.5 h-3.5"></i>
+                <span>Mandar Alerta a Todos los No-Checados</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-panel/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <th class="py-3.5 px-4">Empleado / PIN</th>
+                  <th class="py-3.5 px-4">Empresa & Sucursal</th>
+                  <th class="py-3.5 px-4">Turno</th>
+                  <th class="py-3.5 px-4">Entrada & Puntualidad</th>
+                  <th class="py-3.5 px-4">Salida a Comer / Regreso</th>
+                  <th class="py-3.5 px-4">Salida / Otros</th>
+                  <th class="py-3.5 px-4">Alerta "¿Por qué no checó?" / Justificación</th>
+                  <th class="py-3.5 px-4 text-right">Acciones Directas</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-table-body" class="divide-y divide-slate-200 dark:divide-slate-800/70 text-xs">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- COMPANY ANALYTICS CHARTS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-charcoal p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Puntualidad vs. Retardos por Sucursal</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Comparativa en tiempo real entre sucursales de las empresas</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-[11px] font-bold">CRM Analytics</span>
+            </div>
+            <div class="h-64">
+              <canvas id="branchComparisonChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-charcoal p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Minutos de Retardo Hoy por Empleado</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Detecta rápidamente quién acumuló más minutos tarde hoy</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-[11px] font-bold">Monitoreo de Retardos</span>
+            </div>
+            <div class="h-64">
+              <canvas id="companyLateChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VISTA 2: APP DEL EMPLEADO (CHECADOR + ALERTAS + GRÁFICA PERSONAL)   -->
+      <!-- =================================================================== -->
+      <section id="tab-employee-app" class="tab-section tab-hidden p-4 sm:p-6 space-y-6">
+
+        <!-- Employee Selector Banner (to test any employee's phone view) -->
+        <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-emerald-950 p-4 sm:p-5 rounded-2xl border border-indigo-500/40 text-white flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
+              <i data-lucide="smartphone" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400">Simulador en Vivo • Beneficio para el Empleado</span>
+              <h3 class="text-base sm:text-lg font-extrabold">Portal y App Móvil del Empleado</h3>
+              <p class="text-xs text-slate-300">
+                Aquí el empleado registra su entrada/comida/salida, recibe la <strong>alerta de por qué no checó</strong> para poder justificar sin perder su bono, y consulta su <strong>gráfica personal de puntualidad y retardos</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div class="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <label class="text-xs font-bold text-indigo-200">👤 Viendo App de:</label>
+            <select id="employee-app-selector" onchange="selectActiveEmployee(this.value)" class="bg-slate-900/90 border border-indigo-400/50 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-400">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- MAIN EMPLOYEE GRID: Left = Mobile Clock & Alerts, Right = Personal Late Graphs & History -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+          <!-- LEFT COLUMN (5 cols): MOBILE CHECK-IN TERMINAL & SMART ALERT BOX -->
+          <div class="xl:col-span-5 space-y-5">
+
+            <!-- SMART ALERT CARD FOR EMPLOYEE ("¿POR QUÉ NO CHECASTE?") -->
+            <div id="emp-alert-card" class="rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/30 p-5 pulse-red">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                  </span>
+                  <div>
+                    <span id="emp-alert-badge" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-600 text-white">
+                      ALERTA DE ASISTENCIA ACTIVA
+                    </span>
+                    <h4 id="emp-alert-title" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white mt-1">
+                      ¿Por qué no has registrado tu checada?
+                    </h4>
+                  </div>
+                </div>
+                <button onclick="sendWhatsAppToActiveEmployee()" class="btn-tactile px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shrink-0" title="Abrir en WhatsApp">
+                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp
+                </button>
+              </div>
+
+              <p id="emp-alert-desc" class="text-xs text-slate-700 dark:text-slate-200 mt-2.5 leading-relaxed bg-white/70 dark:bg-obsidian/60 p-3 rounded-xl border border-rose-500/30">
+                <!-- Dynamic message -->
+              </p>
+
+              <!-- Quick Justification Form for Employee -->
+              <div class="mt-3 space-y-2.5">
+                <p class="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                  💡 Selecciona un motivo rápido o escribe qué pasó (se enviará directo a la tabla de tu empresa para proteger tu asistencia):
+                </p>
+                <div class="flex flex-wrap gap-1.5">
+                  <button onclick="prefillJustification('Olvidé checar al entrar pero ya estoy en mi puesto en la sucursal')" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-panel hover:bg-indigo-600 hover:text-white border border-slate-300 dark:border-slate-700 text-[11px] font-medium transition">
+                    🙋‍♂️ Olvidé checar al entrar
+                  </button>
+                  <button onclick="prefillJustification('El lector biométrico de huella/QR no me reconoció al primer intento')" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-panel hover:bg-indigo-600 hover:text-white border border-slate-300 dark:border-slate-700 text-[11px] font-medium transition">
+                    🖐️ Falla en lector de huella
+                  </button>
+                  <button onclick="prefillJustification('Tráfico pesado / percance vial camino a la sucursal')" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-panel hover:bg-indigo-600 hover:text-white border border-slate-300 dark:border-slate-700 text-[11px] font-medium transition">
+                    🚗 Tráfico / Transporte
+                  </button>
+                  <button onclick="prefillJustification('Salí directo a visita con cliente / comisión autorizada')" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-panel hover:bg-indigo-600 hover:text-white border border-slate-300 dark:border-slate-700 text-[11px] font-medium transition">
+                    💼 Comisión con cliente
+                  </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                  <input type="text" id="emp-justification-input" placeholder="Escribe por qué no checaste o motivo del retardo..." class="flex-1 bg-white dark:bg-obsidian border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                  <button onclick="submitEmployeeJustification(true)" class="btn-tactile px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>Responder y Checar Ahora</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- MOBILE PHONE CHECK-IN CARD -->
+            <div class="bg-white dark:bg-charcoal rounded-3xl border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+              <!-- Phone Top Bar -->
+              <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                  <div id="emp-avatar" class="w-11 h-11 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-base text-white">
+                    CM
+                  </div>
+                  <div>
+                    <h4 id="emp-name-display" class="font-bold text-sm text-white">Carlos Mendoza</h4>
+                    <p id="emp-branch-display" class="text-[11px] text-slate-400">Sucursal Centro • PIN: 1024</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span id="emp-shift-badge" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] font-mono-clock text-emerald-400">
+                    Turno 09:00 - 18:00
+                  </span>
+                </div>
+              </div>
+
+              <!-- Live Clock & GPS Geofence Status -->
+              <div class="p-5 text-center bg-gradient-to-b from-slate-900/5 to-transparent dark:from-obsidian/50 border-b border-slate-200 dark:border-slate-800">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                  <span id="emp-gps-status">GPS Verificado: A 14m de la sucursal (Dentro de geocerca)</span>
+                </span>
+
+                <div id="emp-phone-clock" class="font-mono-clock text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-3">
+                  09:25:00
+                </div>
+                <p id="emp-current-status-text" class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                  Estado actual: Pendiente de checar
+                </p>
+
+                <!-- Today's 4 Timestamps Mini-Timeline -->
+                <div class="grid grid-cols-4 gap-2 mt-4 text-center">
+                  <div class="bg-slate-100 dark:bg-panel p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Entrada</span>
+                    <span id="emp-step-entry" class="font-mono-clock text-xs font-bold text-slate-800 dark:text-white">--:--</span>
+                  </div>
+                  <div class="bg-slate-100 dark:bg-panel p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Sale Comer</span>
+                    <span id="emp-step-lunch-out" class="font-mono-clock text-xs font-bold text-slate-800 dark:text-white">--:--</span>
+                  </div>
+                  <div class="bg-slate-100 dark:bg-panel p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Regresa</span>
+                    <span id="emp-step-lunch-in" class="font-mono-clock text-xs font-bold text-slate-800 dark:text-white">--:--</span>
+                  </div>
+                  <div class="bg-slate-100 dark:bg-panel p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Salida</span>
+                    <span id="emp-step-exit" class="font-mono-clock text-xs font-bold text-slate-800 dark:text-white">--:--</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons for Employee Check-In (Entrada, Salir a Comer, Regresar, Salida, Otro) -->
+              <div class="p-5 space-y-3">
+                <p class="text-xs font-bold text-slate-600 dark:text-slate-300">
+                  👇 Toca el evento que deseas registrar (se envía al instante a la tabla de tu empresa):
+                </p>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <button onclick="employeePerformCheck('entrada')" class="btn-tactile p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex flex-col items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20">
+                    <i data-lucide="log-in" class="w-5 h-5"></i>
+                    <span>1. Checar Entrada</span>
+                    <span class="text-[10px] text-emerald-100 font-normal">Llegada a sucursal</span>
+                  </button>
+
+                  <button onclick="employeePerformCheck('salida_comida')" class="btn-tactile p-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex flex-col items-center justify-center gap-1.5 shadow-lg shadow-cyan-600/20">
+                    <i data-lucide="utensils" class="w-5 h-5"></i>
+                    <span>2. Salir a Comer</span>
+                    <span class="text-[10px] text-cyan-100 font-normal">Inicia hora de comida</span>
+                  </button>
+
+                  <button onclick="employeePerformCheck('regreso_comida')" class="btn-tactile p-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex flex-col items-center justify-center gap-1.5 shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    <span>3. Regresar de Comer</span>
+                    <span class="text-[10px] text-indigo-100 font-normal">Fin de comida</span>
+                  </button>
+
+                  <button onclick="employeePerformCheck('salida')" class="btn-tactile p-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex flex-col items-center justify-center gap-1.5 shadow-lg shadow-rose-600/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span>4. Salida de Turno</span>
+                    <span class="text-[10px] text-rose-100 font-normal">Cierre de jornada</span>
+                  </button>
+                </div>
+
+                <!-- Special Event ("Y lo que sea": Comisión, Permiso, Banco, Médico) -->
+                <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                    ⚡ ¿Otro movimiento especial? (Comisión, Banco, Cita Médica, Home Office):
+                  </label>
+                  <div class="flex gap-2">
+                    <select id="emp-special-event-select" class="flex-1 bg-slate-100 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold">
+                      <option value="Salida a Comisión con Cliente">💼 Salida a Comisión con Cliente</option>
+                      <option value="Salida a Banco / Trámite">🏦 Salida a Banco / Trámite</option>
+                      <option value="Pausa Médica Autorizada">🏥 Pausa Médica Autorizada</option>
+                      <option value="Cambio de Sucursal en Ruta">🚚 Cambio de Sucursal en Ruta</option>
+                      <option value="Trabajo Remoto / Home Office">🏠 Checada desde Home Office</option>
+                    </select>
+                    <button onclick="employeePerformCheck('especial')" class="btn-tactile px-3.5 py-2 bg-slate-800 dark:bg-slate-700 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold">
+                      Registrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN (7 cols): EMPLOYEE'S PERSONAL CHARTS & PUNCTUALITY BONUS -->
+          <div class="xl:col-span-7 space-y-5">
+
+            <!-- Why it benefits the employee: Bonus & Personal Metrics Banner -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold uppercase text-emerald-500">💰 Bono de Puntualidad</span>
+                <p id="emp-bonus-amount" class="text-2xl font-black text-slate-900 dark:text-white mt-1">$1,200 MXN</p>
+                <p id="emp-bonus-status" class="text-[11px] text-emerald-500 font-semibold mt-0.5">Protegido (Justifica a tiempo)</p>
+              </div>
+
+              <div class="bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold uppercase text-amber-500">⏱️ Minutos Tarde (Semana)</span>
+                <p id="emp-weekly-late-mins" class="text-2xl font-black text-amber-500 mt-1">24 min</p>
+                <p id="emp-weekly-late-days" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">En los últimos 7 días</p>
+              </div>
+
+              <div class="bg-white dark:bg-charcoal p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold uppercase text-indigo-400">📊 Puntualidad Personal</span>
+                <p id="emp-punctuality-pct" class="text-2xl font-black text-indigo-500 mt-1">86%</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Meta para bono: ≥ 85%</p>
+              </div>
+            </div>
+
+            <!-- PERSONAL GRAPH FOR EMPLOYEE: CUÁNDO LLEGÓ TARDE Y MINUTOS DE RETARDO -->
+            <div class="bg-white dark:bg-charcoal p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                  <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-500 text-[10px] font-extrabold uppercase">
+                    Gráfica Personal del Empleado
+                  </span>
+                  <h4 class="font-extrabold text-base text-slate-900 dark:text-white mt-0.5">
+                    📈 Mi Gráfica de Llegadas y Minutos de Retardo (Últimos 7 Días)
+                  </h4>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    En <strong class="text-emerald-500">verde</strong> los días que llegaste a tiempo y en <strong class="text-amber-500">ámbar/rojo</strong> cuando llegaste tarde (minutos exactos después de tu hora de entrada).
+                  </p>
+                </div>
+                <button onclick="sendGraphReportToEmployeeWhatsApp()" class="btn-tactile px-3 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-500 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
+                  <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                  <span>Mandar Gráfica a mi WhatsApp</span>
+                </button>
+              </div>
+
+              <div class="h-64">
+                <canvas id="employeePersonalLateChart"></canvas>
+              </div>
+            </div>
+
+            <!-- EMPLOYEE WEEKLY LOG BREAKDOWN TABLE -->
+            <div class="bg-white dark:bg-charcoal rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <i data-lucide="calendar-clock" class="w-4 h-4 text-indigo-500"></i>
+                  <span>Mi Historial Detallado de la Semana (Entradas, Comidas y Retardos)</span>
+                </h4>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-panel/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      <th class="py-2.5 px-4">Día</th>
+                      <th class="py-2.5 px-4">Hora Entrada</th>
+                      <th class="py-2.5 px-4">Comida (Minutos)</th>
+                      <th class="py-2.5 px-4">Retardo</th>
+                      <th class="py-2.5 px-4">Estatus / Beneficio</th>
+                    </tr>
+                  </thead>
+                  <tbody id="emp-weekly-table-body" class="divide-y divide-slate-200 dark:divide-slate-800/60">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VISTA 3: CRM MULTI-EMPRESA Y MULTI-SUCURSAL                         -->
+      <!-- =================================================================== -->
+      <section id="tab-crm-multi" class="tab-section tab-hidden p-4 sm:p-6 space-y-6">
+        <div class="bg-white dark:bg-charcoal p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-500">Arquitectura Multi-Tenant B2B</span>
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">CRM Corporativo: Empresas, Sucursales y Plantillas</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Administra múltiples razones sociales, configura horarios y tolerancias por sucursal, y agrega nuevas empresas o empleados en vivo.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="openModal('modal-new-company')" class="btn-tactile px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+              <i data-lucide="building" class="w-4 h-4"></i> + Nueva Empresa
+            </button>
+            <button onclick="openModal('modal-new-branch')" class="btn-tactile px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+              <i data-lucide="map-pin-plus" class="w-4 h-4"></i> + Nueva Sucursal
+            </button>
+            <button onclick="openModal('modal-new-employee')" class="btn-tactile px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+              <i data-lucide="user-plus" class="w-4 h-4"></i> + Nuevo Empleado
+            </button>
+          </div>
+        </div>
+
+        <!-- Companies & Branches Grid -->
+        <div id="crm-companies-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VISTA 4: MODO KIOSCO DE SUCURSAL (PIN / QR EN TABLET)               -->
+      <!-- =================================================================== -->
+      <section id="tab-kiosk" class="tab-section tab-hidden p-4 sm:p-6">
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+
+          <!-- Left: Numeric Keypad Kiosk -->
+          <div class="md:col-span-7 bg-white dark:bg-charcoal p-6 rounded-3xl border-2 border-indigo-500/40 shadow-2xl">
+            <div class="text-center border-b border-slate-200 dark:border-slate-800 pb-4">
+              <span class="px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-400 text-[11px] font-bold">
+                TERMINAL KIOSCO EN SUCURSAL
+              </span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white mt-2">Ingresa tu PIN de Empleado</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Digita tu código de 4 dígitos y selecciona tu movimiento</p>
+            </div>
+
+            <!-- PIN Display -->
+            <div class="my-4 bg-slate-100 dark:bg-obsidian border border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center">
+              <input type="text" id="kiosk-pin-input" maxlength="4" placeholder="• • • •" class="w-full bg-transparent text-center font-mono-clock text-3xl font-black tracking-[0.5em] text-indigo-600 dark:text-emerald-400 outline-none">
+              <p id="kiosk-detected-emp" class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                Esperando PIN de 4 dígitos...
+              </p>
+            </div>
+
+            <!-- Keypad -->
+            <div class="grid grid-cols-3 gap-2.5 my-4">
+              <button onclick="kioskPressDigit('1')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">1</button>
+              <button onclick="kioskPressDigit('2')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">2</button>
+              <button onclick="kioskPressDigit('3')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">3</button>
+              <button onclick="kioskPressDigit('4')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">4</button>
+              <button onclick="kioskPressDigit('5')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">5</button>
+              <button onclick="kioskPressDigit('6')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">6</button>
+              <button onclick="kioskPressDigit('7')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">7</button>
+              <button onclick="kioskPressDigit('8')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">8</button>
+              <button onclick="kioskPressDigit('9')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">9</button>
+              <button onclick="kioskClearPin()" class="btn-tactile py-3.5 rounded-2xl bg-rose-500/15 text-rose-500 font-bold text-xs">BORRAR</button>
+              <button onclick="kioskPressDigit('0')" class="btn-tactile py-3.5 rounded-2xl bg-slate-100 dark:bg-panel hover:bg-indigo-600 hover:text-white font-mono-clock text-lg font-bold">0</button>
+              <button onclick="kioskBackspace()" class="btn-tactile py-3.5 rounded-2xl bg-slate-200 dark:bg-slate-800 text-xs font-bold">⌫</button>
+            </div>
+
+            <!-- Kiosk Event Buttons -->
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+              <button onclick="kioskSubmitCheck('entrada')" class="btn-tactile py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5">
+                <i data-lucide="log-in" class="w-4 h-4"></i> Checar Entrada
+              </button>
+              <button onclick="kioskSubmitCheck('salida_comida')" class="btn-tactile py-3 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-1.5">
+                <i data-lucide="utensils" class="w-4 h-4"></i> Salir a Comer
+              </button>
+              <button onclick="kioskSubmitCheck('regreso_comida')" class="btn-tactile py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Regresar de Comer
+              </button>
+              <button onclick="kioskSubmitCheck('salida')" class="btn-tactile py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-1.5">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Salida de Turno
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Quick PIN Cheat-Sheet for Testing -->
+          <div class="md:col-span-5 bg-white dark:bg-charcoal p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="list-checks" class="w-4 h-4 text-emerald-500"></i>
+              <span>PINs Rápidos de Prueba (Clic para autocompletar)</span>
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Haz clic en cualquier empleado para cargar su PIN en el kiosco y registrar su entrada, comida o salida:
+            </p>
+            <div id="kiosk-pin-list" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VISTA 5: CONECTOR DE RELOJES BIOMÉTRICOS FÍSICOS & WEBHOOK API      -->
+      <!-- =================================================================== -->
+      <section id="tab-hardware" class="tab-section tab-hidden p-4 sm:p-6 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Hardware Simulator -->
+          <div class="lg:col-span-6 bg-white dark:bg-charcoal p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <i data-lucide="fingerprint" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Simulador de Reloj Checador Biométrico (Huella / Rostro)</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Conecta terminales ZKTeco, Hikvision, Anviz o lectores QR de sucursal.</p>
+              </div>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Dispositivo Biométrico de Sucursal</label>
+                <select id="hw-device-select" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-semibold">
+                  <option value="ZKTeco SpeedFace-V5L (Sucursal Centro)">ZKTeco SpeedFace-V5L • Sucursal Centro (IP: 192.168.1.201)</option>
+                  <option value="Hikvision MinMoe Facial (Valle Oriente)">Hikvision MinMoe Facial • Valle Oriente (IP: 192.168.2.110)</option>
+                  <option value="ZKTeco BioTime Cloud (CEDIS Norte)">ZKTeco BioTime Cloud • CEDIS Norte (IP: 10.0.14.55)</option>
+                  <option value="Anviz FacePass 7 Pro (Clínica Roma)">Anviz FacePass 7 Pro • Clínica Roma (IP: 172.16.0.42)</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Empleado Detectado por Huella/Rostro</label>
+                  <select id="hw-emp-select" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-semibold">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Tipo de Evento y Hora</label>
+                  <div class="flex gap-2">
+                    <select id="hw-event-select" class="flex-1 bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2.5 text-xs font-semibold">
+                      <option value="entrada">Entrada</option>
+                      <option value="salida_comida">Salida a Comer</option>
+                      <option value="regreso_comida">Regreso Comida</option>
+                      <option value="salida">Salida Turno</option>
+                    </select>
+                    <input type="time" id="hw-time-input" value="09:28" class="bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-mono-clock">
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="simulateBiometricPulse()" class="btn-tactile w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg">
+                <i data-lucide="radio" class="w-4 h-4"></i>
+                <span>Enviar Pulso Biométrico a las Tablas de la Empresa</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- API & Webhook Log Console -->
+          <div class="lg:col-span-6 bg-slate-900 text-slate-200 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-400 font-mono-clock">POST /api/webhook/biometric</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">API Activa</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">
+                Cualquier reloj checador físico o ERP puede enviar un JSON con el `employeePin`, `event` y `timestamp` para alimentar las tablas y disparar gráficas al instante:
+              </p>
+              <pre id="webhook-console-log" class="mt-3 p-3.5 rounded-xl bg-obsidian border border-slate-800 text-[11px] font-mono-clock text-emerald-300 overflow-x-auto leading-relaxed">{
+  "device": "ZKTeco SpeedFace-V5L",
+  "branch": "Sucursal Centro",
+  "employeePin": "1024",
+  "event": "entrada",
+  "timestamp": "09:24",
+  "lateMinutes": 24,
+  "employeeGraphUpdated": true
+}</pre>
+            </div>
+
+            <div class="border-t border-slate-800 pt-3 flex items-center justify-between text-xs">
+              <span class="text-slate-400">¿Tienes un archivo CSV/TXT de un reloj biométrico?</span>
+              <button onclick="exportAttendanceCSV()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold">
+                Descargar Plantilla CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOCIAL PROOF / TESTIMONIALS & FOOTER (#18, #20) -->
+      <footer class="no-print mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-charcoal px-4 sm:px-6 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-panel/60 border border-slate-200 dark:border-slate-800 text-xs">
+            <div class="flex items-center gap-1 text-amber-400 mb-1">★★★★★</div>
+            <p class="text-slate-600 dark:text-slate-300 italic">"Reducimos los retardos un 42% porque al empleado sí le gusta usar la app: le avisa si olvidó checar su comida o entrada y ve su gráfica para no perder su bono."</p>
+            <p class="font-bold text-slate-900 dark:text-white mt-2">— Dir. Operaciones, Grupo Gastronómico del Norte (3 Sucursales)</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-panel/60 border border-slate-200 dark:border-slate-800 text-xs">
+            <div class="flex items-center gap-1 text-amber-400 mb-1">★★★★★</div>
+            <p class="text-slate-600 dark:text-slate-300 italic">"Conectamos los relojes biométricos del CEDIS y la app móvil de los repartidores en una sola tabla maestra para nómina."</p>
+            <p class="font-bold text-slate-900 dark:text-white mt-2">— Gerente RH, Logística Express S.A.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-panel/60 border border-slate-200 dark:border-slate-800 text-xs flex flex-col justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold text-[10px]">SISTEMA MULTI-TENANT ACTIVO</span>
+              <p class="text-slate-600 dark:text-slate-300 mt-1.5">Sincronización en vivo entre sucursales, alertas WhatsApp y exportación directa a Excel.</p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 mt-2">
+              <span class="text-[11px] text-slate-400">Sesiones activas hoy: <strong class="text-emerald-400">148 checadas</strong></span>
+              <button onclick="switchTab('employee-app')" class="text-indigo-400 hover:underline font-bold">Abrir App →</button>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- ERGONOMIC MOBILE BOTTOM NAVIGATION BAR (#5) -->
+  <nav class="no-print lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-charcoal/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 grid grid-cols-5 py-1.5 px-1">
+    <button onclick="switchTab('company-tables')" id="mob-nav-company-tables" class="flex flex-col items-center justify-center py-1 text-indigo-500 font-bold text-[10px]">
+      <i data-lucide="table-properties" class="w-4 h-4 mb-0.5"></i>
+      <span>Tablas</span>
+    </button>
+    <button onclick="switchTab('employee-app')" id="mob-nav-employee-app" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 font-semibold text-[10px]">
+      <i data-lucide="smartphone" class="w-4 h-4 mb-0.5"></i>
+      <span>Mi App</span>
+    </button>
+    <button onclick="switchTab('crm-multi')" id="mob-nav-crm-multi" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 font-semibold text-[10px]">
+      <i data-lucide="building-2" class="w-4 h-4 mb-0.5"></i>
+      <span>Empresas</span>
+    </button>
+    <button onclick="switchTab('kiosk')" id="mob-nav-kiosk" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 font-semibold text-[10px]">
+      <i data-lucide="key-round" class="w-4 h-4 mb-0.5"></i>
+      <span>Kiosco</span>
+    </button>
+    <button onclick="switchTab('hardware')" id="mob-nav-hardware" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 font-semibold text-[10px]">
+      <i data-lucide="cpu" class="w-4 h-4 mb-0.5"></i>
+      <span>Relojes</span>
+    </button>
+  </nav>
+
+  <!-- BACK TO TOP FLOATING BUTTON (#7) -->
+  <button id="back-to-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" class="no-print fixed bottom-20 lg:bottom-6 right-5 z-40 w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+    <i data-lucide="arrow-up" class="w-5 h-5"></i>
+  </button>
+
+  <!-- =================================================================== -->
+  <!-- MODALES FUNCIONALES CON VALIDACIÓN EN TIEMPO REAL (#12, #13)        -->
+  <!-- =================================================================== -->
+
+  <!-- MODAL 1: SIMULAR CHECADA / REGISTRAR MOVIMIENTO -->
+  <div id="modal-new-check" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-charcoal border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-base text-slate-900 dark:text-white">⚡ Registrar / Simular Checada</h3>
+        <button onclick="closeModal('modal-new-check')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-panel text-slate-400">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Empleado</label>
+          <select id="modal-check-emp" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 font-semibold"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Movimiento</label>
+            <select id="modal-check-type" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 font-semibold">
+              <option value="entrada">1. Entrada</option>
+              <option value="salida_comida">2. Salida a Comer</option>
+              <option value="regreso_comida">3. Regreso de Comer</option>
+              <option value="salida">4. Salida de Turno</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Hora Exacta</label>
+            <input type="time" id="modal-check-time" value="09:22" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 font-mono-clock font-bold">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Método de Checado</label>
+          <select id="modal-check-method" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 font-semibold">
+            <option value="App Móvil GPS">📱 App Móvil GPS</option>
+            <option value="Biométrico Huella">🖐️ Reloj Biométrico Huella</option>
+            <option value="Kiosco PIN Sucursal">🔢 Kiosco PIN Sucursal</option>
+            <option value="Gafete QR">📷 Gafete QR</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal('modal-new-check')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-panel text-xs font-bold">Cancelar</button>
+        <button onclick="submitManualCheckModal()" class="btn-tactile px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">Guardar Checada</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: NUEVA EMPRESA -->
+  <div id="modal-new-company" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-charcoal border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-base text-slate-900 dark:text-white">🏢 Dar de Alta Nueva Empresa en CRM</h3>
+        <button onclick="closeModal('modal-new-company')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-panel text-slate-400">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold mb-1">Nombre de la Empresa *</label>
+          <input type="text" id="new-comp-name" placeholder="Ej. Corporativo Automotriz Bajío S.A." class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+          <p id="err-comp-name" class="text-[11px] text-rose-500 hidden mt-1">Ingresa el nombre de la empresa.</p>
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Giro / Industria</label>
+          <input type="text" id="new-comp-industry" placeholder="Ej. Manufactura / Retail / Alimentos" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Nombre de la Primera Sucursal *</label>
+          <input type="text" id="new-comp-branch" placeholder="Ej. Sucursal Querétaro Centro" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal('modal-new-company')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-panel text-xs font-bold">Cancelar</button>
+        <button onclick="createNewCompany()" class="btn-tactile px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">Crear Empresa y Sucursal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: NUEVA SUCURSAL -->
+  <div id="modal-new-branch" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-charcoal border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-base text-slate-900 dark:text-white">📍 Agregar Sucursal a Empresa</h3>
+        <button onclick="closeModal('modal-new-branch')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-panel text-slate-400">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold mb-1">Empresa</label>
+          <select id="new-branch-comp" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 font-semibold"></select>
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Nombre de la Sucursal *</label>
+          <input type="text" id="new-branch-name" placeholder="Ej. Sucursal Santa Fe / Planta Norte" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+          <p id="err-branch-name" class="text-[11px] text-rose-500 hidden mt-1">El nombre de la sucursal es obligatorio.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">Hora de Entrada</label>
+            <input type="time" id="new-branch-entry" value="09:00" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-mono-clock">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Tolerancia (Minutos)</label>
+            <input type="number" id="new-branch-tol" value="10" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-mono-clock">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal('modal-new-branch')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-panel text-xs font-bold">Cancelar</button>
+        <button onclick="createNewBranch()" class="btn-tactile px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold">Guardar Sucursal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: NUEVO EMPLEADO -->
+  <div id="modal-new-employee" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-charcoal border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-base text-slate-900 dark:text-white">👤 Alta de Empleado en Sucursal</h3>
+        <button onclick="closeModal('modal-new-employee')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-panel text-slate-400">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold mb-1">Nombre Completo *</label>
+          <input type="text" id="new-emp-name" placeholder="Ej. Laura Gómez Morales" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+          <p id="err-emp-name" class="text-[11px] text-rose-500 hidden mt-1">Ingresa el nombre del empleado.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">Puesto / Rol</label>
+            <input type="text" id="new-emp-role" placeholder="Ej. Cajera / Supervisor" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Teléfono WhatsApp *</label>
+            <input type="tel" id="new-emp-phone" placeholder="5215512345678" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">Sucursal Asignada</label>
+            <select id="new-emp-branch" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 font-semibold"></select>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Hora Entrada</label>
+            <input type="time" id="new-emp-entry" value="09:00" class="w-full bg-slate-50 dark:bg-panel border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-mono-clock">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal('modal-new-employee')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-panel text-xs font-bold">Cancelar</button>
+        <button onclick="createNewEmployee()" class="btn-tactile px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">Dar de Alta Empleado</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- APPLICATION LOGIC & MULTI-TENANT ENGINE                             -->
+  <!-- =================================================================== -->
+  <script>
+    const STORAGE_KEY = 'checapro_crm_state_v1';
+    let currentLang = 'es';
+    let currentTableFilter = 'all';
+    let branchChartInstance = null;
+    let companyLateChartInstance = null;
+    let empPersonalChartInstance = null;
+
+    // Initial Multi-Company, Multi-Branch, Multi-Employee Dataset
+    function getInitialState() {
+      return {
+        selectedCompanyId: 'all',
+        selectedBranchId: 'all',
+        activeEmployeeId: 'emp-1',
+        companies: [
+          {
+            id: 'comp-1',
+            name: 'Grupo Gastronómico & Retail del Norte',
+            industry: 'Restaurantes & Retail',
+            plan: 'Enterprise Multi-Sucursal',
+            contact: 'rh@grupogastronomico.mx'
+          },
+          {
+            id: 'comp-2',
+            name: 'Logística & Industrial Express S.A.',
+            industry: 'Logística, CEDIS y Manufactura',
+            plan: 'Pro Industrial',
+            contact: 'capitalhumano@logisticaexpress.mx'
+          },
+          {
+            id: 'comp-3',
+            name: 'Clínicas & Laboratorios SaludTotal',
+            industry: 'Salud y Laboratorios',
+            plan: 'Corporativo Salud',
+            contact: 'personal@saludtotal.mx'
+          }
+        ],
+        branches: [
+          { id: 'br-1', companyId: 'comp-1', name: 'Sucursal Centro Histórico', entryTime: '09:00', exitTime: '18:00', tolerance: 10, lunchMins: 60, device: 'ZKTeco SpeedFace-V5L' },
+          { id: 'br-2', companyId: 'comp-1', name: 'Sucursal Valle Oriente', entryTime: '09:00', exitTime: '18:00', tolerance: 10, lunchMins: 60, device: 'Hikvision MinMoe' },
+          { id: 'br-3', companyId: 'comp-1', name: 'Sucursal Aeropuerto T2', entryTime: '08:00', exitTime: '17:00', tolerance: 5, lunchMins: 45, device: 'Kiosco QR + App GPS' },
+          { id: 'br-4', companyId: 'comp-2', name: 'CEDIS Norte (Tlalnepantla)', entryTime: '08:00', exitTime: '17:00', tolerance: 10, lunchMins: 60, device: 'ZKTeco BioTime Torniquete' },
+          { id: 'br-5', companyId: 'comp-2', name: 'Planta Ensamble Sur', entryTime: '07:00', exitTime: '16:00', tolerance: 5, lunchMins: 45, device: 'Biométrico Huella Dual' },
+          { id: 'br-6', companyId: 'comp-2', name: 'Oficinas Corporativas Reforma', entryTime: '09:00', exitTime: '18:00', tolerance: 15, lunchMins: 60, device: 'App Móvil GPS' },
+          { id: 'br-7', companyId: 'comp-3', name: 'Clínica Roma Norte', entryTime: '08:00', exitTime: '17:00', tolerance: 10, lunchMins: 60, device: 'Anviz FacePass 7 Pro' },
+          { id: 'br-8', companyId: 'comp-3', name: 'Laboratorio Polanco', entryTime: '07:30', exitTime: '16:30', tolerance: 10, lunchMins: 60, device: 'Lector Biométrico + App' }
+        ],
+        employees: [
+          {
+            id: 'emp-1',
+            pin: '1024',
+            name: 'Carlos Mendoza Ruíz',
+            role: 'Jefe de Piso',
+            phone: '5215511223344',
+            companyId: 'comp-1',
+            branchId: 'br-1',
+            shiftEntry: '09:00',
+            shiftExit: '18:00',
+            tolerance: 10,
+            bonusAmount: 1200,
+            today: {
+              entryTime: '09:24',
+              lunchOut: '14:05',
+              lunchIn: '15:01',
+              exitTime: null,
+              extraEvent: null,
+              method: 'App Móvil GPS',
+              lateMinutes: 24,
+              alertSent: true,
+              alertMessage: '⚠️ Llegaste a las 09:24 (+24 min después de tu entrada 09:00). Te enviamos tu gráfica de la semana. Justifica aquí si tuviste un percance para proteger tu bono de $1,200.',
+              justification: 'Tráfico detenido por cierre vial en Av. Juárez, avisé por grupo.',
+              justificationStatus: 'pending'
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '08:55', lunchMins: 55, lateMins: 0 },
+              { day: 'Mar', entry: '09:18', lunchMins: 60, lateMins: 18 },
+              { day: 'Mié', entry: '08:58', lunchMins: 52, lateMins: 0 },
+              { day: 'Jue', entry: '09:04', lunchMins: 58, lateMins: 0 },
+              { day: 'Vie', entry: '09:15', lunchMins: 62, lateMins: 15 },
+              { day: 'Sáb', entry: '08:59', lunchMins: 48, lateMins: 0 },
+              { day: 'Hoy', entry: '09:24', lunchMins: 56, lateMins: 24 }
+            ]
+          },
+          {
+            id: 'emp-2',
+            pin: '1025',
+            name: 'Sofía Ramírez Vega',
+            role: 'Encargada de Caja',
+            phone: '5215522334455',
+            companyId: 'comp-1',
+            branchId: 'br-1',
+            shiftEntry: '09:00',
+            shiftExit: '18:00',
+            tolerance: 10,
+            bonusAmount: 1200,
+            today: {
+              entryTime: null,
+              lunchOut: null,
+              lunchIn: null,
+              exitTime: null,
+              extraEvent: null,
+              method: 'Sin registro',
+              lateMinutes: 0,
+              alertSent: true,
+              alertMessage: '🚨 ALERTA AUTOMÁTICA: Son más de las 09:10 AM y no has checado tu ENTRADA en Sucursal Centro. ¿Olvidaste checar en el reloj o tuviste algún imprevisto? Responde aquí con 1 clic.',
+              justification: null,
+              justificationStatus: null
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '08:52', lunchMins: 58, lateMins: 0 },
+              { day: 'Mar', entry: '08:57', lunchMins: 55, lateMins: 0 },
+              { day: 'Mié', entry: '09:14', lunchMins: 60, lateMins: 14 },
+              { day: 'Jue', entry: '08:59', lunchMins: 57, lateMins: 0 },
+              { day: 'Vie', entry: '09:02', lunchMins: 54, lateMins: 0 },
+              { day: 'Sáb', entry: '08:55', lunchMins: 50, lateMins: 0 },
+              { day: 'Hoy', entry: 'Sin checar', lunchMins: 0, lateMins: 25 }
+            ]
+          },
+          {
+            id: 'emp-3',
+            pin: '1026',
+            name: 'Miguel Ángel Torres',
+            role: 'Chef Ejecutivo',
+            phone: '5215533445566',
+            companyId: 'comp-1',
+            branchId: 'br-2',
+            shiftEntry: '09:00',
+            shiftExit: '18:00',
+            tolerance: 10,
+            bonusAmount: 1500,
+            today: {
+              entryTime: '08:51',
+              lunchOut: '14:15',
+              lunchIn: null,
+              exitTime: null,
+              extraEvent: null,
+              method: 'Biométrico Huella',
+              lateMinutes: 0,
+              alertSent: true,
+              alertMessage: '🍽️ Saliste a comer a las 14:15. Recuerda registrar tu regreso de comida antes de cumplir 60 minutos para mantener tu racha perfecta.',
+              justification: null,
+              justificationStatus: null
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '08:48', lunchMins: 54, lateMins: 0 },
+              { day: 'Mar', entry: '08:53', lunchMins: 58, lateMins: 0 },
+              { day: 'Mié', entry: '08:55', lunchMins: 52, lateMins: 0 },
+              { day: 'Jue', entry: '08:50', lunchMins: 59, lateMins: 0 },
+              { day: 'Vie', entry: '08:57', lunchMins: 55, lateMins: 0 },
+              { day: 'Sáb', entry: '08:49', lunchMins: 51, lateMins: 0 },
+              { day: 'Hoy', entry: '08:51', lunchMins: 45, lateMins: 0 }
+            ]
+          },
+          {
+            id: 'emp-4',
+            pin: '1027',
+            name: 'Valeria Castañeda',
+            role: 'Barista Especialista',
+            phone: '5215544556677',
+            companyId: 'comp-1',
+            branchId: 'br-3',
+            shiftEntry: '08:00',
+            shiftExit: '17:00',
+            tolerance: 5,
+            bonusAmount: 1000,
+            today: {
+              entryTime: '08:19',
+              lunchOut: '13:00',
+              lunchIn: '13:44',
+              exitTime: '17:04',
+              extraEvent: null,
+              method: 'Kiosco PIN Sucursal',
+              lateMinutes: 19,
+              alertSent: true,
+              alertMessage: '⚠️ Registro de entrada a las 08:19 (+19 min tarde en Aeropuerto T2). Revisa tu gráfica semanal.',
+              justification: 'Retraso en línea del Metro, repuse los 19 minutos al salir.',
+              justificationStatus: 'approved'
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '07:56', lunchMins: 42, lateMins: 0 },
+              { day: 'Mar', entry: '08:12', lunchMins: 45, lateMins: 12 },
+              { day: 'Mié', entry: '07:58', lunchMins: 44, lateMins: 0 },
+              { day: 'Jue', entry: '08:02', lunchMins: 43, lateMins: 0 },
+              { day: 'Vie', entry: '08:21', lunchMins: 45, lateMins: 21 },
+              { day: 'Sáb', entry: '07:55', lunchMins: 40, lateMins: 0 },
+              { day: 'Hoy', entry: '08:19', lunchMins: 44, lateMins: 19 }
+            ]
+          },
+          {
+            id: 'emp-5',
+            pin: '2048',
+            name: 'Roberto Hernández Gil',
+            role: 'Coordinador de Almacén',
+            phone: '5215555667788',
+            companyId: 'comp-2',
+            branchId: 'br-4',
+            shiftEntry: '08:00',
+            shiftExit: '17:00',
+            tolerance: 10,
+            bonusAmount: 1400,
+            today: {
+              entryTime: '08:33',
+              lunchOut: '13:10',
+              lunchIn: '14:28',
+              exitTime: null,
+              extraEvent: null,
+              method: 'ZKTeco BioTime',
+              lateMinutes: 33,
+              alertSent: true,
+              alertMessage: '⚠️ Entrada con +33 min de retardo (08:33) y comida de 78 min. Responde aquí si estabas recibiendo descarga en andén.',
+              justification: 'Estaba desde las 07:50 en patio recibiendo tráiler de proveedor pero chequé huella al subir a oficina.',
+              justificationStatus: 'pending'
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '07:55', lunchMins: 58, lateMins: 0 },
+              { day: 'Mar', entry: '08:04', lunchMins: 60, lateMins: 0 },
+              { day: 'Mié', entry: '08:22', lunchMins: 62, lateMins: 22 },
+              { day: 'Jue', entry: '07:58', lunchMins: 55, lateMins: 0 },
+              { day: 'Vie', entry: '08:01', lunchMins: 59, lateMins: 0 },
+              { day: 'Sáb', entry: '07:52', lunchMins: 50, lateMins: 0 },
+              { day: 'Hoy', entry: '08:33', lunchMins: 78, lateMins: 33 }
+            ]
+          },
+          {
+            id: 'emp-6',
+            pin: '2049',
+            name: 'Daniela Ortiz Pineda',
+            role: 'Ingeniera de Calidad',
+            phone: '5215566778899',
+            companyId: 'comp-2',
+            branchId: 'br-5',
+            shiftEntry: '07:00',
+            shiftExit: '16:00',
+            tolerance: 5,
+            bonusAmount: 1600,
+            today: {
+              entryTime: '06:54',
+              lunchOut: '12:00',
+              lunchIn: '12:42',
+              exitTime: '16:05',
+              extraEvent: null,
+              method: 'Biométrico Huella',
+              lateMinutes: 0,
+              alertSent: false,
+              alertMessage: '✅ Jornada perfecta registrada hoy en Planta Ensamble Sur. Bono al 100%.',
+              justification: null,
+              justificationStatus: null
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '06:55', lunchMins: 43, lateMins: 0 },
+              { day: 'Mar', entry: '06:58', lunchMins: 44, lateMins: 0 },
+              { day: 'Mié', entry: '06:52', lunchMins: 41, lateMins: 0 },
+              { day: 'Jue', entry: '06:57', lunchMins: 45, lateMins: 0 },
+              { day: 'Vie', entry: '06:59', lunchMins: 42, lateMins: 0 },
+              { day: 'Sáb', entry: '06:54', lunchMins: 40, lateMins: 0 },
+              { day: 'Hoy', entry: '06:54', lunchMins: 42, lateMins: 0 }
+            ]
+          },
+          {
+            id: 'emp-7',
+            pin: '2050',
+            name: 'Fernando Lozano Díaz',
+            role: 'Ejecutivo de Cuenta B2B',
+            phone: '5215577889900',
+            companyId: 'comp-2',
+            branchId: 'br-6',
+            shiftEntry: '09:00',
+            shiftExit: '18:00',
+            tolerance: 15,
+            bonusAmount: 1200,
+            today: {
+              entryTime: '09:06',
+              lunchOut: '14:30',
+              lunchIn: null,
+              exitTime: null,
+              extraEvent: 'Salida a Comisión con Cliente',
+              method: 'App Móvil GPS',
+              lateMinutes: 0,
+              alertSent: false,
+              alertMessage: '💼 En comisión externa autorizada + Salida a comer 14:30.',
+              justification: null,
+              justificationStatus: null
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '09:05', lunchMins: 58, lateMins: 0 },
+              { day: 'Mar', entry: '09:25', lunchMins: 60, lateMins: 25 },
+              { day: 'Mié', entry: '09:08', lunchMins: 55, lateMins: 0 },
+              { day: 'Jue', entry: '09:02', lunchMins: 54, lateMins: 0 },
+              { day: 'Vie', entry: '09:11', lunchMins: 59, lateMins: 0 },
+              { day: 'Sáb', entry: '09:00', lunchMins: 45, lateMins: 0 },
+              { day: 'Hoy', entry: '09:06', lunchMins: 50, lateMins: 0 }
+            ]
+          },
+          {
+            id: 'emp-8',
+            pin: '3090',
+            name: 'Dra. Mariana Solís',
+            role: 'Química Analista Titular',
+            phone: '5215588990011',
+            companyId: 'comp-3',
+            branchId: 'br-7',
+            shiftEntry: '08:00',
+            shiftExit: '17:00',
+            tolerance: 10,
+            bonusAmount: 1800,
+            today: {
+              entryTime: '08:21',
+              lunchOut: '13:30',
+              lunchIn: '14:25',
+              exitTime: null,
+              extraEvent: null,
+              method: 'Anviz FacePass Facial',
+              lateMinutes: 21,
+              alertSent: true,
+              alertMessage: '⚠️ Entrada registrada 08:21 (+21 min tarde en Clínica Roma). Puedes justificar aquí si atendiste urgencia previa.',
+              justification: 'Pasé primero a dejar muestras urgentes al Laboratorio Polanco a las 07:45.',
+              justificationStatus: 'approved'
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '07:54', lunchMins: 52, lateMins: 0 },
+              { day: 'Mar', entry: '07:58', lunchMins: 56, lateMins: 0 },
+              { day: 'Mié', entry: '08:01', lunchMins: 55, lateMins: 0 },
+              { day: 'Jue', entry: '08:16', lunchMins: 58, lateMins: 16 },
+              { day: 'Vie', entry: '07:57', lunchMins: 54, lateMins: 0 },
+              { day: 'Sáb', entry: '07:53', lunchMins: 48, lateMins: 0 },
+              { day: 'Hoy', entry: '08:21', lunchMins: 55, lateMins: 21 }
+            ]
+          },
+          {
+            id: 'emp-9',
+            pin: '3091',
+            name: 'Jorge Luis Navarro',
+            role: 'Recepción y Toma de Muestras',
+            phone: '5215599001122',
+            companyId: 'comp-3',
+            branchId: 'br-8',
+            shiftEntry: '07:30',
+            shiftExit: '16:30',
+            tolerance: 10,
+            bonusAmount: 1100,
+            today: {
+              entryTime: null,
+              lunchOut: null,
+              lunchIn: null,
+              exitTime: null,
+              extraEvent: null,
+              method: 'Sin registro',
+              lateMinutes: 0,
+              alertSent: true,
+              alertMessage: '🚨 ALERTA "¿POR QUÉ NO CHECASTE?": No aparece tu entrada de las 07:30 en Laboratorio Polanco. Confirma tu asistencia desde tu celular.',
+              justification: null,
+              justificationStatus: null
+            },
+            weeklyHistory: [
+              { day: 'Lun', entry: '07:28', lunchMins: 56, lateMins: 0 },
+              { day: 'Mar', entry: '07:49', lunchMins: 60, lateMins: 19 },
+              { day: 'Mié', entry: '07:31', lunchMins: 58, lateMins: 0 },
+              { day: 'Jue', entry: '07:45', lunchMins: 61, lateMins: 15 },
+              { day: 'Vie', entry: '07:29', lunchMins: 55, lateMins: 0 },
+              { day: 'Sáb', entry: '07:33', lunchMins: 52, lateMins: 0 },
+              { day: 'Hoy', entry: 'Sin checar', lunchMins: 0, lateMins: 30 }
+            ]
+          }
+        ]
+      };
+    }
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.companies && parsed.employees) return parsed;
+        }
+      } catch (e) {
+        console.warn('Error loading state:', e);
+      }
+      const initial = getInitialState();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      return initial;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // Also sync to optional local backend if running
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      }).catch(() => {});
+    }
+
+    function resetDemoData() {
+      state = getInitialState();
+      saveState();
+      initSelectors();
+      refreshAllViews();
+      showToast('Datos demo restaurados con éxito (3 empresas, 8 sucursales, 9 empleados)', 'success');
+    }
+
+    // Helper: calculate late minutes comparing HH:MM vs shiftEntry + tolerance
+    function calcLateMinutes(entryHHMM, shiftHHMM, toleranceMins) {
+      if (!entryHHMM || !shiftHHMM) return 0;
+      const [eh, em] = entryHHMM.split(':').map(Number);
+      const [sh, sm] = shiftHHMM.split(':').map(Number);
+      const entryTotal = eh * 60 + em;
+      const shiftTotal = sh * 60 + sm;
+      const diff = entryTotal - shiftTotal;
+      if (diff <= (toleranceMins || 0)) return 0;
+      return diff;
+    }
+
+    // Helper: calculate lunch duration in minutes
+    function calcLunchMinutes(outHHMM, inHHMM) {
+      if (!outHHMM || !inHHMM) return null;
+      const [oh, om] = outHHMM.split(':').map(Number);
+      const [ih, im] = inHHMM.split(':').map(Number);
+      const diff = (ih * 60 + im) - (oh * 60 + om);
+      return diff > 0 ? diff : 45;
+    }
+
+    // Helper: get employee computed status
+    function getEmployeeComputedStatus(emp) {
+      const t = emp.today;
+      if (!t.entryTime) return 'missing';
+      if (t.lunchOut && !t.lunchIn) return 'lunch';
+      if (t.lateMinutes > 0) return 'late';
+      return 'on_time';
+    }
+
+    function getCompanyById(id) {
+      return state.companies.find(c => c.id === id) || { name: 'Empresa' };
+    }
+
+    function getBranchById(id) {
+      return state.branches.find(b => b.id === id) || { name: 'Sucursal' };
+    }
+
+    // Toast notification system (#14)
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-600 border-emerald-400 text-white',
+        warning: 'bg-amber-500 border-amber-300 text-slate-950',
+        error: 'bg-rose-600 border-rose-400 text-white',
+        info: 'bg-indigo-600 border-indigo-400 text-white'
+      };
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-2xl text-xs font-bold flex items-center justify-between gap-3 transition-all duration-300 ${colors[type] || colors.success}`;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="opacity-80 hover:opacity-100 font-black">✕</button>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 4200);
+    }
+
+    // Populate global selectors
+    function initSelectors() {
+      const compSelect = document.getElementById('global-company-select');
+      const mobCompSelect = document.getElementById('mobile-company-select');
+      const compOptions = `<option value="all">🌎 Todas las Empresas (${state.companies.length})</option>` +
+        state.companies.map(c => `<option value="${c.id}">🏢 ${c.name}</option>`).join('');
+
+      compSelect.innerHTML = compOptions;
+      mobCompSelect.innerHTML = compOptions;
+      compSelect.value = state.selectedCompanyId;
+      mobCompSelect.value = state.selectedCompanyId;
+
+      updateBranchSelector();
+      updateEmployeeSelectors();
+    }
+
+    function updateBranchSelector() {
+      const branchSelect = document.getElementById('global-branch-select');
+      const filteredBranches = state.selectedCompanyId === 'all'
+        ? state.branches
+        : state.branches.filter(b => b.companyId === state.selectedCompanyId);
+
+      branchSelect.innerHTML = `<option value="all">📍 Todas las Sucursales (${filteredBranches.length})</option>` +
+        filteredBranches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+      if (state.selectedBranchId !== 'all' && !filteredBranches.some(b => b.id === state.selectedBranchId)) {
+        state.selectedBranchId = 'all';
+      }
+      branchSelect.value = state.selectedBranchId;
+    }
+
+    function updateEmployeeSelectors() {
+      const empAppSelect = document.getElementById('employee-app-selector');
+      const hwEmpSelect = document.getElementById('hw-emp-select');
+      const modalEmpSelect = document.getElementById('modal-check-emp');
+
+      const html = state.employees.map(emp => {
+        const br = getBranchById(emp.branchId);
+        const st = getEmployeeComputedStatus(emp);
+        const flag = st === 'missing' ? '🚨 SIN CHECAR' : (st === 'late' ? `⚠️ +${emp.today.lateMinutes}m tarde` : (st === 'lunch' ? '🍽️ En comida' : '✅ A tiempo'));
+        return `<option value="${emp.id}">${emp.name} (${br.name}) — ${flag}</option>`;
+      }).join('');
+
+      if (empAppSelect) {
+        empAppSelect.innerHTML = html;
+        empAppSelect.value = state.activeEmployeeId;
+      }
+      if (hwEmpSelect) hwEmpSelect.innerHTML = html;
+      if (modalEmpSelect) modalEmpSelect.innerHTML = html;
+
+      // Also populate new branch company selector & new employee branch selector
+      const nbComp = document.getElementById('new-branch-comp');
+      if (nbComp) {
+        nbComp.innerHTML = state.companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+      const neBranch = document.getElementById('new-emp-branch');
+      if (neBranch) {
+        neBranch.innerHTML = state.branches.map(b => {
+          const c = getCompanyById(b.companyId);
+          return `<option value="${b.id}">${b.name} (${c.name})</option>`;
+        }).join('');
+      }
+    }
+
+    function handleGlobalFilterChange() {
+      state.selectedCompanyId = document.getElementById('global-company-select').value;
+      updateBranchSelector();
+      state.selectedBranchId = document.getElementById('global-branch-select').value;
+      document.getElementById('mobile-company-select').value = state.selectedCompanyId;
+      saveState();
+      refreshAllViews();
+    }
+
+    function syncMobileFilter(val) {
+      document.getElementById('global-company-select').value = val;
+      state.selectedCompanyId = val;
+      state.selectedBranchId = 'all';
+      updateBranchSelector();
+      saveState();
+      refreshAllViews();
+    }
+
+    function getFilteredEmployees() {
+      return state.employees.filter(emp => {
+        if (state.selectedCompanyId !== 'all' && emp.companyId !== state.selectedCompanyId) return false;
+        if (state.selectedBranchId !== 'all' && emp.branchId !== state.selectedBranchId) return false;
+        return true;
+      });
+    }
+
+    function setTableFilter(filter) {
+      currentTableFilter = filter;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.className = 'filter-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition';
+        } else {
+          btn.className = 'filter-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-panel text-slate-700 dark:text-slate-300 hover:bg-indigo-500/20 transition';
+        }
+      });
+      renderCompanyTable();
+    }
+
+    // Render KPIs and Master Table
+    function renderCompanyTable() {
+      const baseEmployees = getFilteredEmployees();
+      const search = (document.getElementById('table-search-input')?.value || '').toLowerCase().trim();
+
+      let onTimeCount = 0;
+      let lateCount = 0;
+      let lunchCount = 0;
+      let missingCount = 0;
+
+      baseEmployees.forEach(emp => {
+        const st = getEmployeeComputedStatus(emp);
+        if (st === 'on_time') onTimeCount++;
+        if (st === 'late') lateCount++;
+        if (st === 'lunch') lunchCount++;
+        if (st === 'missing') missingCount++;
+      });
+
+      document.getElementById('kpi-total-emp').textContent = baseEmployees.length;
+      document.getElementById('kpi-ontime').textContent = onTimeCount;
+      document.getElementById('kpi-late').textContent = lateCount;
+      document.getElementById('kpi-lunch').textContent = lunchCount;
+      document.getElementById('kpi-missing').textContent = missingCount;
+      document.getElementById('badge-late-count').textContent = lateCount + missingCount;
+
+      // Update header pill
+      const compLabel = state.selectedCompanyId === 'all'
+        ? `${state.companies.length} Empresas`
+        : getCompanyById(state.selectedCompanyId).name;
+      const brLabel = state.selectedBranchId === 'all'
+        ? `${state.branches.length} Sucursales`
+        : getBranchById(state.selectedBranchId).name;
+      document.getElementById('active-context-pill').textContent = `${compLabel} • ${brLabel}`;
+
+      const rows = baseEmployees.filter(emp => {
+        const st = getEmployeeComputedStatus(emp);
+        if (currentTableFilter === 'on_time' && st !== 'on_time') return false;
+        if (currentTableFilter === 'late' && st !== 'late') return false;
+        if (currentTableFilter === 'lunch' && st !== 'lunch') return false;
+        if (currentTableFilter === 'missing' && st !== 'missing') return false;
+        if (currentTableFilter === 'justified' && !emp.today.justification) return false;
+
+        if (search) {
+          const br = getBranchById(emp.branchId).name.toLowerCase();
+          const co = getCompanyById(emp.companyId).name.toLowerCase();
+          const match = emp.name.toLowerCase().includes(search) ||
+                        emp.pin.includes(search) ||
+                        emp.role.toLowerCase().includes(search) ||
+                        br.includes(search) ||
+                        co.includes(search);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('attendance-table-body');
+      if (rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-10 text-center text-slate-400">
+              No hay registros que coincidan con este filtro. <button onclick="setTableFilter('all')" class="text-indigo-400 underline font-bold ml-1">Ver todos</button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(emp => {
+        const comp = getCompanyById(emp.companyId);
+        const br = getBranchById(emp.branchId);
+        const t = emp.today;
+        const st = getEmployeeComputedStatus(emp);
+
+        // Entry badge
+        let entryBadge = '';
+        if (!t.entryTime) {
+          entryBadge = `
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-500 border border-rose-500/30 font-bold text-[11px]">
+              🚨 SIN CHECAR
+            </span>
+          `;
+        } else if (t.lateMinutes > 0) {
+          entryBadge = `
+            <div class="flex flex-col">
+              <span class="font-mono-clock font-bold text-amber-500 text-xs">${t.entryTime} hrs</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-extrabold text-[10px] w-fit mt-0.5">
+                ⏰ Retardo +${t.lateMinutes} min
+              </span>
+            </div>
+          `;
+        } else {
+          entryBadge = `
+            <div class="flex flex-col">
+              <span class="font-mono-clock font-bold text-emerald-500 text-xs">${t.entryTime} hrs</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] w-fit mt-0.5">
+                ✅ A tiempo
+              </span>
+            </div>
+          `;
+        }
+
+        // Lunch column
+        let lunchHtml = '<span class="text-slate-400">Pendiente</span>';
+        if (t.lunchOut && !t.lunchIn) {
+          lunchHtml = `
+            <div>
+              <span class="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-bold text-[10px]">
+                🍽️ Salió a comer: ${t.lunchOut}
+              </span>
+              <p class="text-[10px] text-slate-400 mt-0.5">En comida actualmente</p>
+            </div>
+          `;
+        } else if (t.lunchOut && t.lunchIn) {
+          const mins = calcLunchMinutes(t.lunchOut, t.lunchIn);
+          const overLunch = mins > (br.lunchMins || 60);
+          lunchHtml = `
+            <div>
+              <span class="font-mono-clock font-semibold text-slate-800 dark:text-slate-200">${t.lunchOut} → ${t.lunchIn}</span>
+              <span class="block text-[10px] font-bold ${overLunch ? 'text-amber-400' : 'text-emerald-400'}">
+                Duración: ${mins} min ${overLunch ? '(Excedido)' : '(OK)'}
+              </span>
+            </div>
+          `;
+        }
+
+        // Exit & Extra column
+        let exitHtml = t.exitTime
+          ? `<span class="font-mono-clock font-bold text-slate-800 dark:text-slate-200">${t.exitTime} hrs</span>`
+          : `<span class="text-slate-400 text-[11px]">En turno</span>`;
+        if (t.extraEvent) {
+          exitHtml += `<span class="block mt-0.5 px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-400 text-[10px] font-bold w-fit">${t.extraEvent}</span>`;
+        }
+        exitHtml += `<span class="block text-[10px] text-slate-400 mt-0.5">${t.method}</span>`;
+
+        // Alert & Justification column
+        let alertHtml = '';
+        if (t.justification) {
+          const jBadge = t.justificationStatus === 'approved'
+            ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">✓ Justificado Aprobado</span>`
+            : `<button onclick="approveJustification('${emp.id}')" class="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-extrabold transition">Aprobar Justificación</button>`;
+          alertHtml = `
+            <div class="max-w-xs space-y-1">
+              <div class="flex items-center gap-1.5">${jBadge}</div>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-panel p-2 rounded-lg border border-slate-200 dark:border-slate-700 italic">
+                "${t.justification}"
+              </p>
+            </div>
+          `;
+        } else if (st === 'missing') {
+          alertHtml = `
+            <div class="space-y-1">
+              <span class="text-[11px] font-bold text-rose-400 block">⚠️ Alerta enviada al empleado</span>
+              <span class="text-[10px] text-slate-400 block">Esperando respuesta "¿Por qué no checó?"</span>
+            </div>
+          `;
+        } else if (st === 'late') {
+          alertHtml = `
+            <div class="space-y-1">
+              <span class="text-[11px] font-bold text-amber-400 block">📈 Gráfica de retardo enviada</span>
+              <span class="text-[10px] text-slate-400 block">Sin justificación aún</span>
+            </div>
+          `;
+        } else {
+          alertHtml = `<span class="text-[11px] text-emerald-500 font-semibold">✓ Sin incidencias</span>`;
+        }
+
+        const initials = emp.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-panel/40 transition">
+            <td class="py-3.5 px-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 font-extrabold flex items-center justify-center shrink-0">
+                  ${initials}
+                </div>
+                <div>
+                  <p class="font-bold text-slate-900 dark:text-white">${emp.name}</p>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400">${emp.role} • <span class="font-mono-clock text-indigo-400">PIN ${emp.pin}</span></p>
+                </div>
+              </div>
+            </td>
+            <td class="py-3.5 px-4">
+              <p class="font-bold text-slate-800 dark:text-slate-200">${br.name}</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">${comp.name}</p>
+            </td>
+            <td class="py-3.5 px-4 font-mono-clock text-[11px]">
+              <span class="font-bold text-slate-700 dark:text-slate-200">${emp.shiftEntry} - ${emp.shiftExit}</span>
+              <span class="block text-[10px] text-slate-400">Tol: ${emp.tolerance} min</span>
+            </td>
+            <td class="py-3.5 px-4">${entryBadge}</td>
+            <td class="py-3.5 px-4">${lunchHtml}</td>
+            <td class="py-3.5 px-4">${exitHtml}</td>
+            <td class="py-3.5 px-4">${alertHtml}</td>
+            <td class="py-3.5 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="openEmployeeInApp('${emp.id}')" class="btn-tactile px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold flex items-center gap-1" title="Abrir App y Gráfica de este Empleado">
+                  <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+                  <span>Ver App / Gráfica</span>
+                </button>
+                <button onclick="sendAlertToEmployee('${emp.id}')" class="btn-tactile px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 hover:text-white text-rose-400 border border-rose-500/30 text-[11px] font-bold" title="Mandar alerta de ¿Por qué no checaste?">
+                  🔔 Alertar
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // Open specific employee in Employee App view
+    function openEmployeeInApp(empId) {
+      state.activeEmployeeId = empId;
+      saveState();
+      switchTab('employee-app');
+      selectActiveEmployee(empId);
+    }
+
+    function selectActiveEmployee(empId) {
+      state.activeEmployeeId = empId;
+      saveState();
+      const sel = document.getElementById('employee-app-selector');
+      if (sel) sel.value = empId;
+      renderEmployeeAppView();
+    }
+
+    // Render Employee App View (Phone Terminal + Alert Box + Personal Late Chart)
+    function renderEmployeeAppView() {
+      const emp = state.employees.find(e => e.id === state.activeEmployeeId) || state.employees[0];
+      if (!emp) return;
+
+      const br = getBranchById(emp.branchId);
+      const comp = getCompanyById(emp.companyId);
+      const t = emp.today;
+      const initials = emp.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+
+      document.getElementById('emp-avatar').textContent = initials;
+      document.getElementById('emp-name-display').textContent = emp.name;
+      document.getElementById('emp-branch-display').textContent = `${br.name} (${comp.name}) • PIN: ${emp.pin}`;
+      document.getElementById('emp-shift-badge').textContent = `Turno ${emp.shiftEntry} - ${emp.shiftExit}`;
+
+      // Steps
+      document.getElementById('emp-step-entry').textContent = t.entryTime || '--:--';
+      document.getElementById('emp-step-lunch-out').textContent = t.lunchOut || '--:--';
+      document.getElementById('emp-step-lunch-in').textContent = t.lunchIn || '--:--';
+      document.getElementById('emp-step-exit').textContent = t.exitTime || '--:--';
+
+      // Status text
+      const st = getEmployeeComputedStatus(emp);
+      const statusLabels = {
+        missing: '🚨 Pendiente de checar entrada (Alerta Activa)',
+        late: `⚠️ Entrada registrada a las ${t.entryTime} (+${t.lateMinutes} min tarde)`,
+        lunch: `🍽️ En hora de comida desde las ${t.lunchOut}`,
+        on_time: `✅ Entrada puntual a las ${t.entryTime}`
+      };
+      document.getElementById('emp-current-status-text').textContent = statusLabels[st] || 'Activo';
+
+      // Alert Box customization
+      const alertCard = document.getElementById('emp-alert-card');
+      const alertBadge = document.getElementById('emp-alert-badge');
+      const alertTitle = document.getElementById('emp-alert-title');
+      const alertDesc = document.getElementById('emp-alert-desc');
+
+      if (st === 'missing') {
+        alertCard.className = 'rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/30 p-5 pulse-red';
+        alertBadge.className = 'text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-600 text-white';
+        alertBadge.textContent = '🚨 ALERTA: ¿POR QUÉ NO CHECASTE?';
+        alertTitle.textContent = `Hola ${emp.name.split(' ')[0]}, no detectamos tu checada de las ${emp.shiftEntry}`;
+        alertDesc.textContent = t.alertMessage || `Tu turno en ${br.name} inició a las ${emp.shiftEntry} y no hay registro en el reloj. Responde aquí qué sucedió o checa de inmediato para evitar descuento por falta.`;
+      } else if (st === 'late') {
+        alertCard.className = 'rounded-2xl border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/25 p-5';
+        alertBadge.className = 'text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500 text-slate-950';
+        alertBadge.textContent = `⏰ RETARDO DETECTADO (+${t.lateMinutes} MIN)`;
+        alertTitle.textContent = `Llegaste a las ${t.entryTime} (Tu entrada es ${emp.shiftEntry})`;
+        alertDesc.textContent = t.alertMessage || `Se actualizó tu gráfica personal de puntualidad. Si tuviste un contratiempo justificado o falla en el lector, repórtalo abajo para conservar tu bono de $${emp.bonusAmount} MXN.`;
+      } else {
+        alertCard.className = 'rounded-2xl border border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20 p-5';
+        alertBadge.className = 'text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600 text-white';
+        alertBadge.textContent = '✅ ASISTENCIA AL DÍA';
+        alertTitle.textContent = `¡Excelente puntualidad, ${emp.name.split(' ')[0]}!`;
+        alertDesc.textContent = t.alertMessage || `Checaste en tiempo y forma en ${br.name}. Si necesitas dejar una nota o aviso a Recursos Humanos sobre tu comida o salida, puedes enviarla aquí.`;
+      }
+
+      document.getElementById('emp-justification-input').value = t.justification || '';
+
+      // Personal Metrics & Weekly Table
+      const totalLateMins = emp.weeklyHistory.reduce((acc, d) => acc + (d.lateMins || 0), 0);
+      const lateDays = emp.weeklyHistory.filter(d => (d.lateMins || 0) > 0).length;
+      const punctualityPct = Math.round(((7 - lateDays) / 7) * 100);
+
+      document.getElementById('emp-bonus-amount').textContent = `$${emp.bonusAmount.toLocaleString()} MXN`;
+      document.getElementById('emp-bonus-status').textContent = t.justification
+        ? '✓ Protegido con justificación enviada'
+        : (lateDays <= 2 ? '✓ Bono activo en rango permitido' : '⚠️ En riesgo: Justifica tu retardo');
+      document.getElementById('emp-weekly-late-mins').textContent = `${totalLateMins} min`;
+      document.getElementById('emp-weekly-late-days').textContent = `${lateDays} día(s) con retardo esta semana`;
+      document.getElementById('emp-punctuality-pct').textContent = `${punctualityPct}%`;
+
+      // Weekly table rows
+      const weeklyTbody = document.getElementById('emp-weekly-table-body');
+      weeklyTbody.innerHTML = emp.weeklyHistory.map(d => {
+        const isLate = d.lateMins > 0;
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-panel/40">
+            <td class="py-2.5 px-4 font-bold text-slate-900 dark:text-white">${d.day}</td>
+            <td class="py-2.5 px-4 font-mono-clock font-semibold">${d.entry}</td>
+            <td class="py-2.5 px-4">${d.lunchMins ? d.lunchMins + ' min' : '--'}</td>
+            <td class="py-2.5 px-4">
+              ${isLate
+                ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">+${d.lateMins} min tarde</span>`
+                : `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">0 min (A tiempo)</span>`}
+            </td>
+            <td class="py-2.5 px-4 text-slate-500 dark:text-slate-400">
+              ${isLate ? 'Registrado en gráfica personal' : 'Suma para Bono de Puntualidad'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderEmployeePersonalChart(emp);
+      lucide.createIcons();
+    }
+
+    // Employee Check-in Action from Phone App
+    function employeePerformCheck(eventType) {
+      const emp = state.employees.find(e => e.id === state.activeEmployeeId);
+      if (!emp) return;
+
+      const now = new Date();
+      const hhmm = now.toTimeString().slice(0, 5);
+      applyCheckEvent(emp, eventType, hhmm, 'App Móvil GPS');
+    }
+
+    // Core Check-In Processor (updates table, late minutes, employee personal chart, and alerts)
+    function applyCheckEvent(emp, eventType, hhmm, methodLabel) {
+      const br = getBranchById(emp.branchId);
+
+      if (eventType === 'entrada') {
+        emp.today.entryTime = hhmm;
+        emp.today.method = methodLabel;
+        const late = calcLateMinutes(hhmm, emp.shiftEntry, emp.tolerance);
+        emp.today.lateMinutes = late;
+
+        // Update "Hoy" in weeklyHistory so the employee's personal graph updates immediately!
+        const todayEntry = emp.weeklyHistory.find(d => d.day === 'Hoy');
+        if (todayEntry) {
+          todayEntry.entry = hhmm;
+          todayEntry.lateMins = late;
+        }
+
+        if (late > 0) {
+          emp.today.alertSent = true;
+          emp.today.alertMessage = `⚠️ Checaste entrada a las ${hhmm} (+${late} min tarde respecto a tu turno ${emp.shiftEntry}). Ya actualizamos tu gráfica personal.`;
+          showToast(`⏰ Entrada de ${emp.name} registrada (${hhmm}) con +${late} min de retardo. Gráfica actualizada.`, 'warning');
+        } else {
+          emp.today.alertSent = false;
+          emp.today.alertMessage = `✅ Entrada puntual registrada a las ${hhmm} vía ${methodLabel}.`;
+          showToast(`✅ Entrada puntual de ${emp.name} registrada a las ${hhmm}`, 'success');
+        }
+      } else if (eventType === 'salida_comida') {
+        if (!emp.today.entryTime) emp.today.entryTime = emp.shiftEntry;
+        emp.today.lunchOut = hhmm;
+        emp.today.lunchIn = null;
+        emp.today.method = methodLabel;
+        emp.today.alertMessage = `🍽️ Salida a comer registrada a las ${hhmm}. Tienes ${br.lunchMins || 60} min para regresar.`;
+        showToast(`🍽️ ${emp.name} registró Salida a Comer a las ${hhmm}`, 'info');
+      } else if (eventType === 'regreso_comida') {
+        if (!emp.today.lunchOut) emp.today.lunchOut = '14:00';
+        emp.today.lunchIn = hhmm;
+        emp.today.method = methodLabel;
+        const mins = calcLunchMinutes(emp.today.lunchOut, hhmm);
+        const todayEntry = emp.weeklyHistory.find(d => d.day === 'Hoy');
+        if (todayEntry) todayEntry.lunchMins = mins;
+        showToast(`🔄 ${emp.name} regresó de comer a las ${hhmm} (${mins} min de comida)`, 'success');
+      } else if (eventType === 'salida') {
+        emp.today.exitTime = hhmm;
+        emp.today.method = methodLabel;
+        showToast(`🏁 ${emp.name} registró Salida de Turno a las ${hhmm}`, 'success');
+      } else if (eventType === 'especial') {
+        const specialVal = document.getElementById('emp-special-event-select')?.value || 'Comisión Externa';
+        emp.today.extraEvent = `${specialVal} (${hhmm})`;
+        if (!emp.today.entryTime) emp.today.entryTime = hhmm;
+        emp.today.method = methodLabel;
+        showToast(`🚀 Evento "${specialVal}" registrado para ${emp.name}`, 'info');
+      }
+
+      saveState();
+      updateEmployeeSelectors();
+      refreshAllViews();
+    }
+
+    function prefillJustification(text) {
+      const input = document.getElementById('emp-justification-input');
+      if (input) input.value = text;
+    }
+
+    function submitEmployeeJustification(alsoCheckIn) {
+      const emp = state.employees.find(e => e.id === state.activeEmployeeId);
+      if (!emp) return;
+      const input = document.getElementById('emp-justification-input');
+      const text = (input?.value || '').trim();
+
+      if (!text) {
+        input.classList.add('border-rose-500');
+        showToast('Por favor escribe o selecciona un motivo para enviar a la empresa', 'error');
+        return;
+      }
+      input.classList.remove('border-rose-500');
+
+      emp.today.justification = text;
+      emp.today.justificationStatus = 'pending';
+
+      if (alsoCheckIn && !emp.today.entryTime) {
+        const now = new Date();
+        const hhmm = now.toTimeString().slice(0, 5);
+        emp.today.entryTime = hhmm;
+        emp.today.method = 'App Móvil (Con Justificación)';
+        emp.today.lateMinutes = calcLateMinutes(hhmm, emp.shiftEntry, emp.tolerance);
+        const todayEntry = emp.weeklyHistory.find(d => d.day === 'Hoy');
+        if (todayEntry) {
+          todayEntry.entry = hhmm;
+          todayEntry.lateMins = emp.today.lateMinutes;
+        }
+      }
+
+      saveState();
+      updateEmployeeSelectors();
+      refreshAllViews();
+      showToast(`💬 Justificación de ${emp.name} enviada a la tabla de la empresa`, 'success');
+    }
+
+    function approveJustification(empId) {
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return;
+      emp.today.justificationStatus = 'approved';
+      saveState();
+      refreshAllViews();
+      showToast(`✅ Justificación de ${emp.name} aprobada (Bono de puntualidad protegido)`, 'success');
+    }
+
+    function sendAlertToEmployee(empId) {
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return;
+      const br = getBranchById(emp.branchId);
+      emp.today.alertSent = true;
+      if (!emp.today.entryTime) {
+        emp.today.alertMessage = `🚨 ALERTA DE RH: Hola ${emp.name.split(' ')[0]}, no aparece tu checada de entrada (${emp.shiftEntry}) en ${br.name}. ¿Por qué no checaste? Responde en tu App.`;
+      } else {
+        emp.today.alertMessage = `📊 Hola ${emp.name.split(' ')[0]}, te enviamos tu gráfica actualizada de puntualidad (+${emp.today.lateMinutes} min de retardo hoy).`;
+      }
+      saveState();
+      refreshAllViews();
+      showToast(`🔔 Alerta "¿Por qué no checaste?" enviada a la App y WhatsApp de ${emp.name}`, 'warning');
+    }
+
+    function triggerAutoAuditAlerts() {
+      let count = 0;
+      state.employees.forEach(emp => {
+        if (!emp.today.entryTime || emp.today.lateMinutes > 0) {
+          emp.today.alertSent = true;
+          count++;
+        }
+      });
+      saveState();
+      refreshAllViews();
+      showToast(`⚡ Auditoría completada: Se enviaron ${count} alertas y gráficas a empleados con retardo o sin checar.`, 'warning');
+    }
+
+    function sendWhatsAppToActiveEmployee() {
+      const emp = state.employees.find(e => e.id === state.activeEmployeeId);
+      if (!emp) return;
+      const msg = encodeURIComponent(`Hola ${emp.name}, te escribimos de ChecaPro CRM (${getBranchById(emp.branchId).name}): Notamos una incidencia en tu checada de hoy (Turno ${emp.shiftEntry}). Por favor entra a tu App para ver tu gráfica y justificar.`);
+      window.open(`https://wa.me/${emp.phone}?text=${msg}`, '_blank');
+    }
+
+    function sendGraphReportToEmployeeWhatsApp() {
+      const emp = state.employees.find(e => e.id === state.activeEmployeeId);
+      if (!emp) return;
+      const totalLate = emp.weeklyHistory.reduce((a, b) => a + (b.lateMins || 0), 0);
+      const msg = encodeURIComponent(`📈 Reporte Personal ChecaPro de ${emp.name}: Esta semana acumulas ${totalLate} min de retardo. Tu Bono de Puntualidad de $${emp.bonusAmount} MXN sigue activo.`);
+      window.open(`https://wa.me/${emp.phone}?text=${msg}`, '_blank');
+    }
+
+    // CHARTS RENDERING (Chart.js)
+    function renderCompanyCharts() {
+      const ctxBranch = document.getElementById('branchComparisonChart');
+      const ctxLate = document.getElementById('companyLateChart');
+      if (!ctxBranch || !ctxLate) return;
+
+      const filteredBranches = state.selectedCompanyId === 'all'
+        ? state.branches
+        : state.branches.filter(b => b.companyId === state.selectedCompanyId);
+
+      const branchLabels = filteredBranches.map(b => b.name.replace('Sucursal ', ''));
+      const onTimeData = filteredBranches.map(b => {
+        return state.employees.filter(e => e.branchId === b.id && getEmployeeComputedStatus(e) === 'on_time').length;
+      });
+      const lateOrMissingData = filteredBranches.map(b => {
+        return state.employees.filter(e => e.branchId === b.id && (getEmployeeComputedStatus(e) === 'late' || getEmployeeComputedStatus(e) === 'missing')).length;
+      });
+
+      if (branchChartInstance) branchChartInstance.destroy();
+      branchChartInstance = new Chart(ctxBranch, {
+        type: 'bar',
+        data: {
+          labels: branchLabels,
+          datasets: [
+            {
+              label: 'A Tiempo / En Comida Normal',
+              data: onTimeData,
+              backgroundColor: 'rgba(16, 185, 129, 0.8)',
+              borderRadius: 8
+            },
+            {
+              label: 'Llegaron Tarde / Sin Checar',
+              data: lateOrMissingData,
+              backgroundColor: 'rgba(245, 158, 11, 0.85)',
+              borderRadius: 8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+          }
+        }
+      });
+
+      const emps = getFilteredEmployees();
+      if (companyLateChartInstance) companyLateChartInstance.destroy();
+      companyLateChartInstance = new Chart(ctxLate, {
+        type: 'bar',
+        data: {
+          labels: emps.map(e => e.name.split(' ')[0]),
+          datasets: [{
+            label: 'Minutos Tarde Hoy',
+            data: emps.map(e => e.today.entryTime ? e.today.lateMinutes : 30),
+            backgroundColor: emps.map(e => {
+              if (!e.today.entryTime) return 'rgba(239, 68, 68, 0.85)';
+              return e.today.lateMinutes > 0 ? 'rgba(245, 158, 11, 0.85)' : 'rgba(16, 185, 129, 0.75)';
+            }),
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+          }
+        }
+      });
+    }
+
+    function renderEmployeePersonalChart(emp) {
+      const ctx = document.getElementById('employeePersonalLateChart');
+      if (!ctx) return;
+
+      const labels = emp.weeklyHistory.map(d => `${d.day} (${d.entry})`);
+      const data = emp.weeklyHistory.map(d => d.lateMins || 0);
+      const colors = data.map(mins => mins === 0 ? 'rgba(16, 185, 129, 0.85)' : (mins > 20 ? 'rgba(239, 68, 68, 0.85)' : 'rgba(245, 158, 11, 0.85)'));
+
+      if (empPersonalChartInstance) empPersonalChartInstance.destroy();
+      empPersonalChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Minutos de Retardo después de tu Hora de Entrada',
+              data,
+              backgroundColor: colors,
+              borderRadius: 10,
+              barThickness: 28
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const v = ctx.raw;
+                  return v === 0 ? '✅ A tiempo (0 min de retardo)' : `⏰ Llegó +${v} minutos tarde`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Minutos Tarde', color: '#94a3b8', font: { size: 11 } },
+              ticks: { color: '#94a3b8' },
+              grid: { color: 'rgba(148,163,184,0.12)' }
+            }
+          }
+        }
+      });
+    }
+
+    // Render CRM Multi-Company & Multi-Branch View
+    function renderCRMMultiView() {
+      const container = document.getElementById('crm-companies-container');
+      if (!container) return;
+
+      container.innerHTML = state.companies.map(comp => {
+        const compBranches = state.branches.filter(b => b.companyId === comp.id);
+        const compEmps = state.employees.filter(e => e.companyId === comp.id);
+        const onTime = compEmps.filter(e => getEmployeeComputedStatus(e) === 'on_time').length;
+        const pct = compEmps.length ? Math.round((onTime / compEmps.length) * 100) : 100;
+
+        return `
+          <div class="card-interactive bg-white dark:bg-charcoal rounded-3xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                    ${comp.plan}
+                  </span>
+                  <h4 class="font-extrabold text-base text-slate-900 dark:text-white mt-1.5">${comp.name}</h4>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">${comp.industry} • ${comp.contact}</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 font-black text-xs">
+                  ${pct}% Puntual
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 my-4 text-center">
+                <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-panel border border-slate-200 dark:border-slate-800">
+                  <span class="text-lg font-black text-slate-900 dark:text-white">${compBranches.length}</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-bold">Sucursales</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-panel border border-slate-200 dark:border-slate-800">
+                  <span class="text-lg font-black text-indigo-400">${compEmps.length}</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-bold">Empleados</span>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Sucursales & Relojes Conectados:</p>
+                ${compBranches.map(b => {
+                  const bEmps = state.employees.filter(e => e.branchId === b.id);
+                  return `
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian/60 border border-slate-200 dark:border-slate-800/80 text-xs flex items-center justify-between">
+                      <div>
+                        <p class="font-bold text-slate-800 dark:text-slate-200">📍 ${b.name}</p>
+                        <p class="text-[10px] text-slate-400">Entrada: ${b.entryTime} (Tol. ${b.tolerance}m) • ${b.device}</p>
+                      </div>
+                      <button onclick="filterByCompanyAndBranch('${comp.id}', '${b.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white font-bold text-[11px] transition">
+                        Ver (${bEmps.length})
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <button onclick="filterByCompanyAndBranch('${comp.id}', 'all')" class="btn-tactile w-full py-2.5 rounded-xl bg-slate-900 dark:bg-panel hover:bg-indigo-600 text-white text-xs font-bold transition">
+              Abrir Tablas de ${comp.name} →
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterByCompanyAndBranch(compId, branchId) {
+      state.selectedCompanyId = compId;
+      state.selectedBranchId = branchId;
+      saveState();
+      initSelectors();
+      switchTab('company-tables');
+      refreshAllViews();
+    }
+
+    // Render Kiosk View
+    function renderKioskView() {
+      const list = document.getElementById('kiosk-pin-list');
+      if (!list) return;
+      list.innerHTML = state.employees.map(emp => {
+        const br = getBranchById(emp.branchId);
+        return `
+          <div onclick="fillKioskPin('${emp.pin}')" class="cursor-pointer p-3 rounded-xl bg-slate-50 dark:bg-panel hover:bg-indigo-600/20 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs transition">
+            <div>
+              <p class="font-bold text-slate-900 dark:text-white">${emp.name}</p>
+              <p class="text-[11px] text-slate-400">${br.name} • Turno ${emp.shiftEntry}</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono-clock font-bold">
+              PIN: ${emp.pin}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function fillKioskPin(pin) {
+      const input = document.getElementById('kiosk-pin-input');
+      input.value = pin;
+      updateKioskDetectedEmployee();
+    }
+
+    function kioskPressDigit(d) {
+      const input = document.getElementById('kiosk-pin-input');
+      if (input.value.length < 4) {
+        input.value += d;
+        updateKioskDetectedEmployee();
+      }
+    }
+
+    function kioskClearPin() {
+      document.getElementById('kiosk-pin-input').value = '';
+      updateKioskDetectedEmployee();
+    }
+
+    function kioskBackspace() {
+      const input = document.getElementById('kiosk-pin-input');
+      input.value = input.value.slice(0, -1);
+      updateKioskDetectedEmployee();
+    }
+
+    function updateKioskDetectedEmployee() {
+      const pin = document.getElementById('kiosk-pin-input').value.trim();
+      const label = document.getElementById('kiosk-detected-emp');
+      const emp = state.employees.find(e => e.pin === pin);
+      if (emp) {
+        const br = getBranchById(emp.branchId);
+        label.textContent = `✓ Empleado identificado: ${emp.name} (${br.name})`;
+        label.className = 'text-xs font-bold text-emerald-400 mt-1';
+      } else if (pin.length === 4) {
+        label.textContent = '❌ PIN no encontrado. Selecciona uno de la lista derecha.';
+        label.className = 'text-xs font-bold text-rose-400 mt-1';
+      } else {
+        label.textContent = 'Esperando PIN de 4 dígitos...';
+        label.className = 'text-xs font-semibold text-slate-400 mt-1';
+      }
+    }
+
+    function kioskSubmitCheck(eventType) {
+      const pin = document.getElementById('kiosk-pin-input').value.trim();
+      const emp = state.employees.find(e => e.pin === pin);
+      if (!emp) {
+        showToast('Ingresa un PIN válido de 4 dígitos primero', 'error');
+        return;
+      }
+      const now = new Date();
+      const hhmm = now.toTimeString().slice(0, 5);
+      applyCheckEvent(emp, eventType, hhmm, 'Kiosco PIN Sucursal');
+      kioskClearPin();
+    }
+
+    // Hardware Simulator Pulse
+    function simulateBiometricPulse() {
+      const device = document.getElementById('hw-device-select').value;
+      const empId = document.getElementById('hw-emp-select').value;
+      const eventType = document.getElementById('hw-event-select').value;
+      const timeVal = document.getElementById('hw-time-input').value || '09:20';
+
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      applyCheckEvent(emp, eventType, timeVal, device.split('(')[0].trim());
+
+      const payload = {
+        device,
+        company: getCompanyById(emp.companyId).name,
+        branch: getBranchById(emp.branchId).name,
+        employeePin: emp.pin,
+        employeeName: emp.name,
+        event: eventType,
+        timestamp: timeVal,
+        lateMinutes: emp.today.lateMinutes,
+        tableUpdated: true,
+        employeeGraphUpdated: true
+      };
+      document.getElementById('webhook-console-log').textContent = JSON.stringify(payload, null, 2);
+    }
+
+    // Modals & Creation Forms (#12, #13)
+    function openModal(id) {
+      updateEmployeeSelectors();
+      const m = document.getElementById(id);
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    function openNewCheckModal() {
+      openModal('modal-new-check');
+    }
+
+    function submitManualCheckModal() {
+      const empId = document.getElementById('modal-check-emp').value;
+      const eventType = document.getElementById('modal-check-type').value;
+      const timeVal = document.getElementById('modal-check-time').value || '09:15';
+      const method = document.getElementById('modal-check-method').value;
+
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      applyCheckEvent(emp, eventType, timeVal, method);
+      closeModal('modal-new-check');
+    }
+
+    function createNewCompany() {
+      const nameInput = document.getElementById('new-comp-name');
+      const indInput = document.getElementById('new-comp-industry');
+      const brInput = document.getElementById('new-comp-branch');
+      const err = document.getElementById('err-comp-name');
+
+      if (!nameInput.value.trim()) {
+        nameInput.classList.add('border-rose-500');
+        err.classList.remove('hidden');
+        return;
+      }
+      nameInput.classList.remove('border-rose-500');
+      err.classList.add('hidden');
+
+      const newCompId = 'comp-' + (state.companies.length + 1) + '-' + Date.now().toString().slice(-3);
+      const newBrId = 'br-' + (state.branches.length + 1) + '-' + Date.now().toString().slice(-3);
+
+      state.companies.push({
+        id: newCompId,
+        name: nameInput.value.trim(),
+        industry: indInput.value.trim() || 'Corporativo General',
+        plan: 'Plan Multi-Sucursal Activo',
+        contact: 'rh@empresa.mx'
+      });
+
+      state.branches.push({
+        id: newBrId,
+        companyId: newCompId,
+        name: brInput.value.trim() || 'Sucursal Matriz',
+        entryTime: '09:00',
+        exitTime: '18:00',
+        tolerance: 10,
+        lunchMins: 60,
+        device: 'App Móvil GPS + Kiosco'
+      });
+
+      nameInput.value = '';
+      indInput.value = '';
+      brInput.value = '';
+      saveState();
+      initSelectors();
+      refreshAllViews();
+      closeModal('modal-new-company');
+      showToast('🏢 Nueva empresa y sucursal creadas en el CRM', 'success');
+    }
+
+    function createNewBranch() {
+      const compId = document.getElementById('new-branch-comp').value;
+      const nameInput = document.getElementById('new-branch-name');
+      const entry = document.getElementById('new-branch-entry').value || '09:00';
+      const tol = parseInt(document.getElementById('new-branch-tol').value || '10', 10);
+      const err = document.getElementById('err-branch-name');
+
+      if (!nameInput.value.trim()) {
+        nameInput.classList.add('border-rose-500');
+        err.classList.remove('hidden');
+        return;
+      }
+      nameInput.classList.remove('border-rose-500');
+      err.classList.add('hidden');
+
+      state.branches.push({
+        id: 'br-' + Date.now().toString().slice(-4),
+        companyId: compId,
+        name: nameInput.value.trim(),
+        entryTime: entry,
+        exitTime: '18:00',
+        tolerance: tol,
+        lunchMins: 60,
+        device: 'Kiosco PIN + App GPS'
+      });
+
+      nameInput.value = '';
+      saveState();
+      initSelectors();
+      refreshAllViews();
+      closeModal('modal-new-branch');
+      showToast('📍 Nueva sucursal agregada correctamente', 'success');
+    }
+
+    function createNewEmployee() {
+      const nameInput = document.getElementById('new-emp-name');
+      const roleInput = document.getElementById('new-emp-role');
+      const phoneInput = document.getElementById('new-emp-phone');
+      const branchId = document.getElementById('new-emp-branch').value;
+      const entry = document.getElementById('new-emp-entry').value || '09:00';
+      const err = document.getElementById('err-emp-name');
+
+      if (!nameInput.value.trim()) {
+        nameInput.classList.add('border-rose-500');
+        err.classList.remove('hidden');
+        return;
+      }
+      nameInput.classList.remove('border-rose-500');
+      err.classList.add('hidden');
+
+      const br = getBranchById(branchId);
+      const newPin = String(Math.floor(4000 + Math.random() * 5000));
+      const newEmpId = 'emp-' + Date.now().toString().slice(-4);
+
+      state.employees.unshift({
+        id: newEmpId,
+        pin: newPin,
+        name: nameInput.value.trim(),
+        role: roleInput.value.trim() || 'Colaborador',
+        phone: phoneInput.value.trim() || '5215500000000',
+        companyId: br.companyId,
+        branchId: br.id,
+        shiftEntry: entry,
+        shiftExit: '18:00',
+        tolerance: br.tolerance || 10,
+        bonusAmount: 1200,
+        today: {
+          entryTime: null,
+          lunchOut: null,
+          lunchIn: null,
+          exitTime: null,
+          extraEvent: null,
+          method: 'Sin registro',
+          lateMinutes: 0,
+          alertSent: true,
+          alertMessage: `🚨 Bienvenido(a) ${nameInput.value.trim()}. Aún no registras tu entrada de las ${entry} en ${br.name}.`,
+          justification: null,
+          justificationStatus: null
+        },
+        weeklyHistory: [
+          { day: 'Lun', entry, lunchMins: 55, lateMins: 0 },
+          { day: 'Mar', entry, lunchMins: 58, lateMins: 0 },
+          { day: 'Mié', entry: '09:16', lunchMins: 60, lateMins: 16 },
+          { day: 'Jue', entry, lunchMins: 54, lateMins: 0 },
+          { day: 'Vie', entry, lunchMins: 57, lateMins: 0 },
+          { day: 'Sáb', entry, lunchMins: 50, lateMins: 0 },
+          { day: 'Hoy', entry: 'Sin checar', lunchMins: 0, lateMins: 20 }
+        ]
+      });
+
+      nameInput.value = '';
+      roleInput.value = '';
+      saveState();
+      initSelectors();
+      refreshAllViews();
+      closeModal('modal-new-employee');
+      showToast(`👤 Empleado registrado con PIN ${newPin}`, 'success');
+    }
+
+    // Export Attendance & Late Table to CSV (Excel)
+    function exportAttendanceCSV() {
+      const emps = getFilteredEmployees();
+      let csv = '\uFEFFPIN,Empleado,Puesto,Empresa,Sucursal,Turno Entrada,Hora Entrada,Minutos Retardo,Salida Comida,Regreso Comida,Salida Turno,Metodo,Justificacion Empleado\n';
+      emps.forEach(e => {
+        const c = getCompanyById(e.companyId).name;
+        const b = getBranchById(e.branchId).name;
+        const t = e.today;
+        csv += `"${e.pin}","${e.name}","${e.role}","${c}","${b}","${e.shiftEntry}","${t.entryTime || 'SIN CHECAR'}","${t.lateMinutes}","${t.lunchOut || ''}","${t.lunchIn || ''}","${t.exitTime || ''}","${t.method}","${(t.justification || '').replace(/"/g, '""')}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_Checador_CRM_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      showToast('📊 Reporte Excel (CSV) descargado correctamente', 'success');
+    }
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      const tabs = ['company-tables', 'employee-app', 'crm-multi', 'kiosk', 'hardware'];
+      const titles = {
+        'company-tables': 'Tablas de Asistencia, Comidas y Retardos en Tiempo Real',
+        'employee-app': 'App del Empleado: Checador, Alertas "¿Por qué no checó?" y Gráfica de Retardos',
+        'crm-multi': 'CRM Multi-Empresa y Multi-Sucursal (Configuración y Plantillas)',
+        'kiosk': 'Terminal Modo Kiosco en Sucursal (PIN Rápido / QR)',
+        'hardware': 'Conector de Relojes Checadores Biométricos & API Webhook'
+      };
+
+      tabs.forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        const navBtn = document.getElementById(`nav-${t}`);
+        const mobBtn = document.getElementById(`mob-nav-${t}`);
+
+        if (t === tabId) {
+          sec.classList.remove('tab-hidden');
+          if (navBtn) navBtn.className = 'btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-xs shadow-md shadow-indigo-600/20';
+          if (mobBtn) mobBtn.className = 'flex flex-col items-center justify-center py-1 text-indigo-500 font-bold text-[10px]';
+        } else {
+          sec.classList.add('tab-hidden');
+          if (navBtn) navBtn.className = 'btn-tactile w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-panel font-semibold text-xs';
+          if (mobBtn) mobBtn.className = 'flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 font-semibold text-[10px]';
+        }
+      });
+
+      document.getElementById('main-view-title').textContent = titles[tabId] || titles['company-tables'];
+      refreshAllViews();
+    }
+
+    function refreshAllViews() {
+      renderCompanyTable();
+      renderCompanyCharts();
+      renderEmployeeAppView();
+      renderCRMMultiView();
+      renderKioskView();
+    }
+
+    // Theme & Language Switchers (#15, #16)
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      showToast(isDark ? '🌙 Modo Oscuro activado' : '☀️ Modo Claro activado', 'info');
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'es' ? 'en' : 'es';
+      const banner = document.getElementById('i18n-top-banner');
+      if (currentLang === 'en') {
+        banner.innerHTML = '<strong>ChecaPro CRM SaaS</strong>: Hybrid Time-Clock (Check-in, Lunch, Check-out), Late Arrivals Tables, Employee Alerts & Personal Graphs.';
+        showToast('🌐 Language switched to English', 'info');
+      } else {
+        banner.innerHTML = '<strong>ChecaPro CRM SaaS</strong>: Reloj Checador Híbrido (Entrada, Comida, Salida), Tablas de Retardos, Alertas al Empleado y Gráficas Personales.';
+        showToast('🌐 Idioma cambiado a Español', 'info');
+      }
+    }
+
+    // Live Clocks & Back-to-top listener
+    setInterval(() => {
+      const now = new Date();
+      const str = now.toTimeString().slice(0, 8);
+      const gClock = document.getElementById('global-live-clock');
+      const pClock = document.getElementById('emp-phone-clock');
+      if (gClock) gClock.textContent = str;
+      if (pClock) pClock.textContent = str;
+    }, 1000);
+
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('back-to-top');
+      if (!btn) return;
+      if (window.scrollY > 400) {
+        btn.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        btn.classList.add('opacity-0', 'pointer-events-none');
+      }
+    });
+
+    // Initialize App on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      initSelectors();
+      refreshAllViews();
+      lucide.createIcons();
+
+      setTimeout(() => {
+        const loader = document.getElementById('loading-screen');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 300);
+        }
+      }, 450);
+    });
+  </script>
+</body>
+</html>

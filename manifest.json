@@ -1,0 +1,17 @@
+{
+  "name": "ChecaPro CRM | Control de Asistencia Multi-Empresa y App del Empleado",
+  "short_name": "ChecaPro CRM",
+  "description": "Sistema híbrido de reloj checador, tablas de retardos en tiempo real, alertas al empleado con gráficas de puntualidad y CRM multi-empresa/multi-sucursal.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#08080a",
+  "theme_color": "#4f46e5",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><circle cx='50' cy='50' r='30' fill='none' stroke='white' stroke-width='7'/><path d='M50 32v18l12 8' fill='none' stroke='%2310b981' stroke-width='7' stroke-linecap='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
