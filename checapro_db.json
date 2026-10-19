@@ -1,12 +1,745 @@
 {
-  "logs": [
-    {
-      "device": "ZKTeco SpeedFace-V5L",
-      "employeePin": "1024",
-      "event": "entrada",
-      "timestamp": "09:24",
-      "receivedAt": "2026-10-16T21:57:39.119Z"
-    }
-  ],
-  "lastSync": null
+  "state": {
+    "selectedCompanyId": "all",
+    "selectedBranchId": "all",
+    "activeEmployeeId": "emp-1",
+    "companies": [
+      {
+        "id": "comp-1",
+        "name": "Grupo Gastronómico & Retail del Norte",
+        "industry": "Restaurantes & Retail",
+        "plan": "Enterprise Multi-Sucursal",
+        "contact": "rh@grupogastronomico.mx"
+      },
+      {
+        "id": "comp-2",
+        "name": "Logística & Industrial Express S.A.",
+        "industry": "Logística, CEDIS y Manufactura",
+        "plan": "Pro Industrial",
+        "contact": "capitalhumano@logisticaexpress.mx"
+      },
+      {
+        "id": "comp-3",
+        "name": "Clínicas & Laboratorios SaludTotal",
+        "industry": "Salud y Laboratorios",
+        "plan": "Corporativo Salud",
+        "contact": "personal@saludtotal.mx"
+      }
+    ],
+    "branches": [
+      {
+        "id": "br-1",
+        "companyId": "comp-1",
+        "name": "Sucursal Centro Histórico",
+        "entryTime": "09:00",
+        "exitTime": "18:00",
+        "tolerance": 10,
+        "lunchMins": 60,
+        "device": "ZKTeco SpeedFace-V5L"
+      },
+      {
+        "id": "br-2",
+        "companyId": "comp-1",
+        "name": "Sucursal Valle Oriente",
+        "entryTime": "09:00",
+        "exitTime": "18:00",
+        "tolerance": 10,
+        "lunchMins": 60,
+        "device": "Hikvision MinMoe"
+      },
+      {
+        "id": "br-3",
+        "companyId": "comp-1",
+        "name": "Sucursal Aeropuerto T2",
+        "entryTime": "08:00",
+        "exitTime": "17:00",
+        "tolerance": 5,
+        "lunchMins": 45,
+        "device": "Kiosco QR + App GPS"
+      },
+      {
+        "id": "br-4",
+        "companyId": "comp-2",
+        "name": "CEDIS Norte (Tlalnepantla)",
+        "entryTime": "08:00",
+        "exitTime": "17:00",
+        "tolerance": 10,
+        "lunchMins": 60,
+        "device": "ZKTeco BioTime Torniquete"
+      },
+      {
+        "id": "br-5",
+        "companyId": "comp-2",
+        "name": "Planta Ensamble Sur",
+        "entryTime": "07:00",
+        "exitTime": "16:00",
+        "tolerance": 5,
+        "lunchMins": 45,
+        "device": "Biométrico Huella Dual"
+      },
+      {
+        "id": "br-6",
+        "companyId": "comp-2",
+        "name": "Oficinas Corporativas Reforma",
+        "entryTime": "09:00",
+        "exitTime": "18:00",
+        "tolerance": 15,
+        "lunchMins": 60,
+        "device": "App Móvil GPS"
+      },
+      {
+        "id": "br-7",
+        "companyId": "comp-3",
+        "name": "Clínica Roma Norte",
+        "entryTime": "08:00",
+        "exitTime": "17:00",
+        "tolerance": 10,
+        "lunchMins": 60,
+        "device": "Anviz FacePass 7 Pro"
+      },
+      {
+        "id": "br-8",
+        "companyId": "comp-3",
+        "name": "Laboratorio Polanco",
+        "entryTime": "07:30",
+        "exitTime": "16:30",
+        "tolerance": 10,
+        "lunchMins": 60,
+        "device": "Lector Biométrico + App"
+      }
+    ],
+    "employees": [
+      {
+        "id": "emp-1",
+        "pin": "1024",
+        "name": "Carlos Mendoza Ruíz",
+        "role": "Jefe de Piso",
+        "phone": "5215511223344",
+        "companyId": "comp-1",
+        "branchId": "br-1",
+        "shiftEntry": "09:00",
+        "shiftExit": "18:00",
+        "tolerance": 10,
+        "bonusAmount": 1200,
+        "today": {
+          "entryTime": "09:24",
+          "lunchOut": "14:05",
+          "lunchIn": "15:01",
+          "exitTime": null,
+          "extraEvent": null,
+          "method": "App Móvil GPS",
+          "lateMinutes": 24,
+          "alertSent": true,
+          "alertMessage": "📊 Hola Carlos, te enviamos tu gráfica actualizada de puntualidad (+24 min de retardo hoy).",
+          "justification": "Tráfico detenido por cierre vial en Av. Juárez, avisé por grupo.",
+          "justificationStatus": "pending"
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "08:55",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "09:18",
+            "lunchMins": 60,
+            "lateMins": 18
+          },
+          {
+            "day": "Mié",
+            "entry": "08:58",
+            "lunchMins": 52,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "09:04",
+            "lunchMins": 58,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "09:15",
+            "lunchMins": 62,
+            "lateMins": 15
+          },
+          {
+            "day": "Sáb",
+            "entry": "08:59",
+            "lunchMins": 48,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "09:24",
+            "lunchMins": 56,
+            "lateMins": 24
+          }
+        ]
+      },
+      {
+        "id": "emp-2",
+        "pin": "1025",
+        "name": "Sofía Ramírez Vega",
+        "role": "Encargada de Caja",
+        "phone": "5215522334455",
+        "companyId": "comp-1",
+        "branchId": "br-1",
+        "shiftEntry": "09:00",
+        "shiftExit": "18:00",
+        "tolerance": 10,
+        "bonusAmount": 1200,
+        "today": {
+          "entryTime": null,
+          "lunchOut": null,
+          "lunchIn": null,
+          "exitTime": null,
+          "extraEvent": null,
+          "method": "Sin registro",
+          "lateMinutes": 0,
+          "alertSent": true,
+          "alertMessage": "🚨 ALERTA DE RH: Hola Sofía, no aparece tu checada de entrada (09:00) en Sucursal Centro Histórico. ¿Por qué no checaste? Responde en tu App.",
+          "justification": null,
+          "justificationStatus": null
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "08:52",
+            "lunchMins": 58,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "08:57",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Mié",
+            "entry": "09:14",
+            "lunchMins": 60,
+            "lateMins": 14
+          },
+          {
+            "day": "Jue",
+            "entry": "08:59",
+            "lunchMins": 57,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "09:02",
+            "lunchMins": 54,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "08:55",
+            "lunchMins": 50,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "Sin checar",
+            "lunchMins": 0,
+            "lateMins": 25
+          }
+        ]
+      },
+      {
+        "id": "emp-3",
+        "pin": "1026",
+        "name": "Miguel Ángel Torres",
+        "role": "Chef Ejecutivo",
+        "phone": "5215533445566",
+        "companyId": "comp-1",
+        "branchId": "br-2",
+        "shiftEntry": "09:00",
+        "shiftExit": "18:00",
+        "tolerance": 10,
+        "bonusAmount": 1500,
+        "today": {
+          "entryTime": "08:51",
+          "lunchOut": "14:15",
+          "lunchIn": null,
+          "exitTime": null,
+          "extraEvent": null,
+          "method": "Biométrico Huella",
+          "lateMinutes": 0,
+          "alertSent": true,
+          "alertMessage": "🍽️ Saliste a comer a las 14:15. Recuerda registrar tu regreso de comida antes de cumplir 60 minutos para mantener tu racha perfecta.",
+          "justification": null,
+          "justificationStatus": null
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "08:48",
+            "lunchMins": 54,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "08:53",
+            "lunchMins": 58,
+            "lateMins": 0
+          },
+          {
+            "day": "Mié",
+            "entry": "08:55",
+            "lunchMins": 52,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "08:50",
+            "lunchMins": 59,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "08:57",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "08:49",
+            "lunchMins": 51,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "08:51",
+            "lunchMins": 45,
+            "lateMins": 0
+          }
+        ]
+      },
+      {
+        "id": "emp-4",
+        "pin": "1027",
+        "name": "Valeria Castañeda",
+        "role": "Barista Especialista",
+        "phone": "5215544556677",
+        "companyId": "comp-1",
+        "branchId": "br-3",
+        "shiftEntry": "08:00",
+        "shiftExit": "17:00",
+        "tolerance": 5,
+        "bonusAmount": 1000,
+        "today": {
+          "entryTime": "08:19",
+          "lunchOut": "13:00",
+          "lunchIn": "13:44",
+          "exitTime": "17:04",
+          "extraEvent": null,
+          "method": "Kiosco PIN Sucursal",
+          "lateMinutes": 19,
+          "alertSent": true,
+          "alertMessage": "⚠️ Registro de entrada a las 08:19 (+19 min tarde en Aeropuerto T2). Revisa tu gráfica semanal.",
+          "justification": "Retraso en línea del Metro, repuse los 19 minutos al salir.",
+          "justificationStatus": "approved"
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "07:56",
+            "lunchMins": 42,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "08:12",
+            "lunchMins": 45,
+            "lateMins": 12
+          },
+          {
+            "day": "Mié",
+            "entry": "07:58",
+            "lunchMins": 44,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "08:02",
+            "lunchMins": 43,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "08:21",
+            "lunchMins": 45,
+            "lateMins": 21
+          },
+          {
+            "day": "Sáb",
+            "entry": "07:55",
+            "lunchMins": 40,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "08:19",
+            "lunchMins": 44,
+            "lateMins": 19
+          }
+        ]
+      },
+      {
+        "id": "emp-5",
+        "pin": "2048",
+        "name": "Roberto Hernández Gil",
+        "role": "Coordinador de Almacén",
+        "phone": "5215555667788",
+        "companyId": "comp-2",
+        "branchId": "br-4",
+        "shiftEntry": "08:00",
+        "shiftExit": "17:00",
+        "tolerance": 10,
+        "bonusAmount": 1400,
+        "today": {
+          "entryTime": "08:33",
+          "lunchOut": "13:10",
+          "lunchIn": "14:28",
+          "exitTime": null,
+          "extraEvent": null,
+          "method": "ZKTeco BioTime",
+          "lateMinutes": 33,
+          "alertSent": true,
+          "alertMessage": "⚠️ Entrada con +33 min de retardo (08:33) y comida de 78 min. Responde aquí si estabas recibiendo descarga en andén.",
+          "justification": "Estaba desde las 07:50 en patio recibiendo tráiler de proveedor pero chequé huella al subir a oficina.",
+          "justificationStatus": "pending"
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "07:55",
+            "lunchMins": 58,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "08:04",
+            "lunchMins": 60,
+            "lateMins": 0
+          },
+          {
+            "day": "Mié",
+            "entry": "08:22",
+            "lunchMins": 62,
+            "lateMins": 22
+          },
+          {
+            "day": "Jue",
+            "entry": "07:58",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "08:01",
+            "lunchMins": 59,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "07:52",
+            "lunchMins": 50,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "08:33",
+            "lunchMins": 78,
+            "lateMins": 33
+          }
+        ]
+      },
+      {
+        "id": "emp-6",
+        "pin": "2049",
+        "name": "Daniela Ortiz Pineda",
+        "role": "Ingeniera de Calidad",
+        "phone": "5215566778899",
+        "companyId": "comp-2",
+        "branchId": "br-5",
+        "shiftEntry": "07:00",
+        "shiftExit": "16:00",
+        "tolerance": 5,
+        "bonusAmount": 1600,
+        "today": {
+          "entryTime": "06:54",
+          "lunchOut": "12:00",
+          "lunchIn": "12:42",
+          "exitTime": "16:05",
+          "extraEvent": null,
+          "method": "Biométrico Huella",
+          "lateMinutes": 0,
+          "alertSent": false,
+          "alertMessage": "✅ Jornada perfecta registrada hoy en Planta Ensamble Sur. Bono al 100%.",
+          "justification": null,
+          "justificationStatus": null
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "06:55",
+            "lunchMins": 43,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "06:58",
+            "lunchMins": 44,
+            "lateMins": 0
+          },
+          {
+            "day": "Mié",
+            "entry": "06:52",
+            "lunchMins": 41,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "06:57",
+            "lunchMins": 45,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "06:59",
+            "lunchMins": 42,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "06:54",
+            "lunchMins": 40,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "06:54",
+            "lunchMins": 42,
+            "lateMins": 0
+          }
+        ]
+      },
+      {
+        "id": "emp-7",
+        "pin": "2050",
+        "name": "Fernando Lozano Díaz",
+        "role": "Ejecutivo de Cuenta B2B",
+        "phone": "5215577889900",
+        "companyId": "comp-2",
+        "branchId": "br-6",
+        "shiftEntry": "09:00",
+        "shiftExit": "18:00",
+        "tolerance": 15,
+        "bonusAmount": 1200,
+        "today": {
+          "entryTime": "09:06",
+          "lunchOut": "14:30",
+          "lunchIn": null,
+          "exitTime": null,
+          "extraEvent": "Salida a Comisión con Cliente",
+          "method": "App Móvil GPS",
+          "lateMinutes": 0,
+          "alertSent": false,
+          "alertMessage": "💼 En comisión externa autorizada + Salida a comer 14:30.",
+          "justification": null,
+          "justificationStatus": null
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "09:05",
+            "lunchMins": 58,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "09:25",
+            "lunchMins": 60,
+            "lateMins": 25
+          },
+          {
+            "day": "Mié",
+            "entry": "09:08",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "09:02",
+            "lunchMins": 54,
+            "lateMins": 0
+          },
+          {
+            "day": "Vie",
+            "entry": "09:11",
+            "lunchMins": 59,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "09:00",
+            "lunchMins": 45,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "09:06",
+            "lunchMins": 50,
+            "lateMins": 0
+          }
+        ]
+      },
+      {
+        "id": "emp-8",
+        "pin": "3090",
+        "name": "Dra. Mariana Solís",
+        "role": "Química Analista Titular",
+        "phone": "5215588990011",
+        "companyId": "comp-3",
+        "branchId": "br-7",
+        "shiftEntry": "08:00",
+        "shiftExit": "17:00",
+        "tolerance": 10,
+        "bonusAmount": 1800,
+        "today": {
+          "entryTime": "08:21",
+          "lunchOut": "13:30",
+          "lunchIn": "14:25",
+          "exitTime": null,
+          "extraEvent": null,
+          "method": "Anviz FacePass Facial",
+          "lateMinutes": 21,
+          "alertSent": true,
+          "alertMessage": "⚠️ Entrada registrada 08:21 (+21 min tarde en Clínica Roma). Puedes justificar aquí si atendiste urgencia previa.",
+          "justification": "Pasé primero a dejar muestras urgentes al Laboratorio Polanco a las 07:45.",
+          "justificationStatus": "approved"
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "07:54",
+            "lunchMins": 52,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "07:58",
+            "lunchMins": 56,
+            "lateMins": 0
+          },
+          {
+            "day": "Mié",
+            "entry": "08:01",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "08:16",
+            "lunchMins": 58,
+            "lateMins": 16
+          },
+          {
+            "day": "Vie",
+            "entry": "07:57",
+            "lunchMins": 54,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "07:53",
+            "lunchMins": 48,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "08:21",
+            "lunchMins": 55,
+            "lateMins": 21
+          }
+        ]
+      },
+      {
+        "id": "emp-9",
+        "pin": "3091",
+        "name": "Jorge Luis Navarro",
+        "role": "Recepción y Toma de Muestras",
+        "phone": "5215599001122",
+        "companyId": "comp-3",
+        "branchId": "br-8",
+        "shiftEntry": "07:30",
+        "shiftExit": "16:30",
+        "tolerance": 10,
+        "bonusAmount": 1100,
+        "today": {
+          "entryTime": null,
+          "lunchOut": null,
+          "lunchIn": null,
+          "exitTime": null,
+          "extraEvent": null,
+          "method": "Sin registro",
+          "lateMinutes": 0,
+          "alertSent": true,
+          "alertMessage": "🚨 ALERTA \"¿POR QUÉ NO CHECASTE?\": No aparece tu entrada de las 07:30 en Laboratorio Polanco. Confirma tu asistencia desde tu celular.",
+          "justification": null,
+          "justificationStatus": null
+        },
+        "weeklyHistory": [
+          {
+            "day": "Lun",
+            "entry": "07:28",
+            "lunchMins": 56,
+            "lateMins": 0
+          },
+          {
+            "day": "Mar",
+            "entry": "07:49",
+            "lunchMins": 60,
+            "lateMins": 19
+          },
+          {
+            "day": "Mié",
+            "entry": "07:31",
+            "lunchMins": 58,
+            "lateMins": 0
+          },
+          {
+            "day": "Jue",
+            "entry": "07:45",
+            "lunchMins": 61,
+            "lateMins": 15
+          },
+          {
+            "day": "Vie",
+            "entry": "07:29",
+            "lunchMins": 55,
+            "lateMins": 0
+          },
+          {
+            "day": "Sáb",
+            "entry": "07:33",
+            "lunchMins": 52,
+            "lateMins": 0
+          },
+          {
+            "day": "Hoy",
+            "entry": "Sin checar",
+            "lunchMins": 0,
+            "lateMins": 30
+          }
+        ]
+      }
+    ]
+  },
+  "lastSync": "2026-10-16T22:03:00.736Z"
 }
